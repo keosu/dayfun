@@ -13,7 +13,7 @@ for (const theme of ["light", "dark"]) {
   });
   await page.locator(".modal-close").click();
   await page.screenshot({ path: `test-results/screenshots/home-${theme}.png` });
-  await page.goto("http://localhost:4173/apps/picker/");
+  await page.goto("http://localhost:4173/#/picker");
   await page.locator("#sound-toggle").uncheck();
   for (const mode of ["wheel", "capsule", "pixel"]) {
     await page.locator(`[data-mode="${mode}"]`).click();
@@ -39,7 +39,7 @@ for (const theme of ["light", "dark"]) {
     await page.locator("#accept-pick").click();
     console.log(theme, mode, await page.locator(".result-value").textContent());
   }
-  await page.goto("http://localhost:4173/apps/kitchen/");
+  await page.goto("http://localhost:4173/#/kitchen");
   await page.screenshot({
     path: `test-results/screenshots/kitchen-${theme}.png`,
   });

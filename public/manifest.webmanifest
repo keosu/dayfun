@@ -1,24 +1,24 @@
 {
-  "id": "/",
+  "id": "./",
   "name": "小日子 · 日常有点意思",
   "short_name": "小日子",
-  "description": "让日常小事多一点乐趣的口袋工具箱",
+  "description": "让日常小事多一点乐趣的口袋工具箱：随心选、今天吃什么",
   "lang": "zh-CN",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "fullscreen",
   "display_override": ["fullscreen", "standalone"],
   "background_color": "#f7f6f2",
   "theme_color": "#f7f6f2",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -27,13 +27,13 @@
   "shortcuts": [
     {
       "name": "随心选",
-      "url": "/apps/picker/",
-      "icons": [{ "src": "/icons/picker-192.png", "sizes": "192x192" }]
+      "url": "./#/picker",
+      "icons": [{ "src": "icons/picker-192.png", "sizes": "192x192" }]
     },
     {
       "name": "今天吃什么",
-      "url": "/apps/kitchen/",
-      "icons": [{ "src": "/icons/kitchen-192.png", "sizes": "192x192" }]
+      "url": "./#/kitchen",
+      "icons": [{ "src": "icons/kitchen-192.png", "sizes": "192x192" }]
     }
   ]
 }

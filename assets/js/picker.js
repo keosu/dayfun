@@ -1,5 +1,4 @@
 import {
-  shell,
   $,
   $$,
   modal,
@@ -11,39 +10,44 @@ import {
 import { icon } from "./icons.js";
 import { get, put, list, remove, changeEvent } from "./storage.js";
 import { validRecords } from "./records.js";
-import { randomIndex, playSound } from "./picker-scenes.js";
+import { randomIndex } from "./picker-scenes.js";
+import { createSfx } from "./picker/audio.js";
 import { createPickerScene } from "./picker-3d.js";
 import { presets, modes } from "./picker-presets.js";
 import { createResultPopover } from "./result-popover.js";
 
-const stored = await get("pickset:current");
-const validState =
-  stored &&
-  validRecords([
-    {
-      id: "pickset:current",
-      type: "pickset",
-      payload: stored,
-      updatedAt: 1,
-      deletedAt: null,
-    },
-  ]);
-let state = validState
-  ? stored
-  : {
-      topic: "吃什么",
-      mode: "wheel",
-      sound: true,
-      sets: structuredClone(presets),
-    };
-const queryTopic = new URLSearchParams(location.search).get("topic");
-if (presets[queryTopic]) state.topic = queryTopic;
+let state;
 let busy = false;
 let scene;
 let sceneKey = "";
+let sceneReady = Promise.resolve();
+let resultPopover;
+const sfx = createSfx(() => state?.sound);
 
-shell(
-  "picker",
+async function loadState() {
+  const stored = await get("pickset:current");
+  const validState =
+    stored &&
+    validRecords([
+      {
+        id: "pickset:current",
+        type: "pickset",
+        payload: stored,
+        updatedAt: 1,
+        deletedAt: null,
+      },
+    ]);
+  return validState
+    ? stored
+    : {
+        topic: "吃什么",
+        mode: "wheel",
+        sound: true,
+        sets: structuredClone(presets),
+      };
+}
+
+const template = () =>
   /* HTML */ ` <div class="page-intro">
       <div class="intro-row">
         <div>
@@ -134,10 +138,8 @@ shell(
           <p id="pick-hint">每个选项都有同样的机会</p>
         </div>
       </section>
-    </div>`,
-);
+    </div>`;
 
-const resultPopover = createResultPopover($(".picker-playground"));
 const save = () => put("pickset", state, "pickset:current");
 function render() {
   const options = state.sets[state.topic];
@@ -179,118 +181,141 @@ function render() {
   if (key !== sceneKey) {
     resultPopover.hide();
     scene?.dispose();
+    scene = null;
     sceneKey = key;
     $("#picker-scene").className = `picker-scene scene-${state.mode}`;
-    scene = createPickerScene($("#picker-scene"), state.mode, options);
+    $(".picker-playground").dataset.scene = state.mode;
     $("#scene-result").hidden = true;
     $(".picker-playground").classList.remove("has-result");
+    // Building WebGL and compiling shaders is a long task; let the page paint first.
+    const mode = state.mode;
+    const token = key;
+    $("#picker-scene").dataset.ready = "false";
+    sceneReady = new Promise((resolve) =>
+      requestAnimationFrame(() =>
+        setTimeout(() => {
+          if (sceneKey === token) {
+            scene = createPickerScene($("#picker-scene"), mode, options, {
+              sfx,
+            });
+            $("#picker-scene").dataset.ready = "true";
+          }
+          resolve();
+        }),
+      ),
+    );
   }
 }
-render();
-$$(".mode-tab").forEach(
-  (button) =>
-    (button.onclick = async () => {
-      if (busy) return;
-      state.mode = button.dataset.mode;
-      render();
-      await save();
-    }),
-);
-$$(".topic-chip").forEach(
-  (button) =>
-    (button.onclick = async () => {
-      if (busy) return;
-      state.topic = button.dataset.topic;
-      render();
-      await save();
-    }),
-);
-$("#option-list").addEventListener("change", async (event) => {
-  if (!event.target.matches("input")) return;
-  const options = state.sets[state.topic];
-  const index = Number(event.target.dataset.index);
-  const value = event.target.value.trim();
-  if (!value || options.some((option, i) => option === value && i !== index)) {
-    toast("选项不能为空，也不能重复");
-    render();
-    return;
-  }
-  options[index] = value;
-  render();
-  await save();
-});
-$("#option-list").addEventListener("click", async (event) => {
-  const button = event.target.closest(".remove-option");
-  if (!button || busy || state.sets[state.topic].length <= 2) return;
-  state.sets[state.topic].splice(Number(button.dataset.index), 1);
-  render();
-  await save();
-});
-$("#add-option").onsubmit = async (event) => {
-  event.preventDefault();
-  if (busy) return;
-  const input = event.target.elements.option;
-  const value = input.value.trim();
-  if (!value) return input.focus();
-  if (state.sets[state.topic].length >= 16) return toast("最多 16 个选项");
-  if (state.sets[state.topic].includes(value)) return toast("这个选项已经有啦");
-  state.sets[state.topic].push(value);
-  input.value = "";
-  render();
-  await save();
-  input.focus();
-};
-$("#sound-toggle").onchange = async (event) => {
-  state.sound = event.target.checked;
-  await save();
-};
-$("#reset-options").onclick = async () => {
-  if (busy) return;
-  state.sets[state.topic] = [...presets[state.topic]];
-  render();
-  await save();
-  toast("已恢复默认选项");
-};
-$("#bulk-edit").onclick = () => {
-  if (busy) return;
-  const dialog = modal({
-    title: "编辑候选项",
-    eyebrow: state.topic,
-    content: /* HTML */ `<form id="bulk-form">
-      <label class="field"
-        >每行一个选项，支持 2–16 个<textarea name="options" rows="7" required>
-${esc(state.sets[state.topic].join("\n"))}</textarea>
-      </label>
-      <p class="fine-print">每项最多 30 个字符，空行自动忽略。</p>
-      <button class="button primary full-width" type="submit">
-        ${icon("check")} 保存候选项
-      </button>
-      <p class="form-status" role="status"></p>
-    </form>`,
-  });
-  $("#bulk-form", dialog).onsubmit = async (event) => {
-    event.preventDefault();
-    const options = event.target.elements.options.value
-      .split("\n")
-      .map((value) => value.trim())
-      .filter(Boolean);
+function bindEvents() {
+  $$(".mode-tab").forEach(
+    (button) =>
+      (button.onclick = async () => {
+        if (busy) return;
+        state.mode = button.dataset.mode;
+        render();
+        await save();
+      }),
+  );
+  $$(".topic-chip").forEach(
+    (button) =>
+      (button.onclick = async () => {
+        if (busy) return;
+        state.topic = button.dataset.topic;
+        render();
+        await save();
+      }),
+  );
+  $("#option-list").addEventListener("change", async (event) => {
+    if (!event.target.matches("input")) return;
+    const options = state.sets[state.topic];
+    const index = Number(event.target.dataset.index);
+    const value = event.target.value.trim();
     if (
-      options.length < 2 ||
-      options.length > 16 ||
-      options.some((value) => value.length > 30) ||
-      new Set(options).size !== options.length
+      !value ||
+      options.some((option, i) => option === value && i !== index)
     ) {
-      $(".form-status", dialog).textContent =
-        "请填写 2–16 个不重复的选项，每个最多 30 字。";
+      toast("选项不能为空，也不能重复");
+      render();
       return;
     }
-    state.sets[state.topic] = options;
-    await save();
+    options[index] = value;
     render();
-    dialog.close();
-    toast("候选项已保存");
+    await save();
+  });
+  $("#option-list").addEventListener("click", async (event) => {
+    const button = event.target.closest(".remove-option");
+    if (!button || busy || state.sets[state.topic].length <= 2) return;
+    state.sets[state.topic].splice(Number(button.dataset.index), 1);
+    render();
+    await save();
+  });
+  $("#add-option").onsubmit = async (event) => {
+    event.preventDefault();
+    if (busy) return;
+    const input = event.target.elements.option;
+    const value = input.value.trim();
+    if (!value) return input.focus();
+    if (state.sets[state.topic].length >= 16) return toast("最多 16 个选项");
+    if (state.sets[state.topic].includes(value))
+      return toast("这个选项已经有啦");
+    state.sets[state.topic].push(value);
+    input.value = "";
+    render();
+    await save();
+    input.focus();
   };
-};
+  $("#sound-toggle").onchange = async (event) => {
+    state.sound = event.target.checked;
+    await save();
+  };
+  $("#reset-options").onclick = async () => {
+    if (busy) return;
+    state.sets[state.topic] = [...presets[state.topic]];
+    render();
+    await save();
+    toast("已恢复默认选项");
+  };
+  $("#bulk-edit").onclick = () => {
+    if (busy) return;
+    const dialog = modal({
+      title: "编辑候选项",
+      eyebrow: state.topic,
+      content: /* HTML */ `<form id="bulk-form">
+        <label class="field"
+          >每行一个选项，支持 2–16 个<textarea name="options" rows="7" required>
+${esc(state.sets[state.topic].join("\n"))}</textarea>
+        </label>
+        <p class="fine-print">每项最多 30 个字符，空行自动忽略。</p>
+        <button class="button primary full-width" type="submit">
+          ${icon("check")} 保存候选项
+        </button>
+        <p class="form-status" role="status"></p>
+      </form>`,
+    });
+    $("#bulk-form", dialog).onsubmit = async (event) => {
+      event.preventDefault();
+      const options = event.target.elements.options.value
+        .split("\n")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      if (
+        options.length < 2 ||
+        options.length > 16 ||
+        options.some((value) => value.length > 30) ||
+        new Set(options).size !== options.length
+      ) {
+        $(".form-status", dialog).textContent =
+          "请填写 2–16 个不重复的选项，每个最多 30 字。";
+        return;
+      }
+      state.sets[state.topic] = options;
+      await save();
+      render();
+      dialog.close();
+      toast("候选项已保存");
+    };
+  };
+}
 
 async function startPick() {
   if (busy) return;
@@ -315,13 +340,14 @@ async function startPick() {
         ? "惊喜正在滚出来…"
         : "跳起来，接住好运…";
   $("#pick-hint").textContent = "看看，今天的答案会是什么";
-  playSound(state.sound);
+  sfx.unlock();
   try {
+    await sceneReady;
     await scene.animate(winner);
     const result = options[winner];
     await put("pick", { topic, result, mode, options, at: Date.now() });
     navigator.vibrate?.([40, 30, 60]);
-    playSound(state.sound, true);
+    sfx.chime();
     $(`[data-candidate="${winner}"]`).classList.add("selected");
     $(".result-value").textContent = result;
     $("#scene-result").hidden = false;
@@ -343,13 +369,12 @@ async function startPick() {
     });
   }
 }
-$("#start-pick").onclick = startPick;
-$("#accept-pick").onclick = () => {
+function acceptPick() {
   resultPopover.hide();
   toast(`今天就选「${$(".result-value").textContent}」啦`);
   $("#accept-pick").innerHTML = `${icon("check")} 就这么定了`;
-};
-$("#picker-history").onclick = async () => {
+}
+async function showHistory() {
   const records = await list("pick");
   const dialog = modal({
     title: "选择记录",
@@ -396,23 +421,38 @@ $("#picker-history").onclick = async () => {
         toast("记录已删除");
       }),
   );
-};
-window.addEventListener(changeEvent, async (event) => {
-  if (event.detail.type !== "merge" || busy) return;
-  const incoming = await get("pickset:current");
-  if (incoming) {
-    state = incoming;
-    $("#sound-toggle").checked = state.sound;
-    render();
-  }
-});
-window.addEventListener("pagehide", () => {
-  resultPopover.hide();
-  scene?.dispose();
-});
-window.addEventListener("pageshow", (event) => {
-  if (event.persisted) {
-    sceneKey = "";
-    render();
-  }
-});
+}
+
+export async function mount(root) {
+  state = await loadState();
+  root.innerHTML = template();
+  resultPopover = createResultPopover($(".picker-playground", root));
+  bindEvents();
+  $("#start-pick").onclick = startPick;
+  $("#accept-pick").onclick = acceptPick;
+  $("#picker-history").onclick = showHistory;
+  render();
+  window.addEventListener(changeEvent, async (event) => {
+    if (event.detail.type !== "merge" || busy) return;
+    const incoming = await get("pickset:current");
+    if (incoming) {
+      state = incoming;
+      $("#sound-toggle").checked = state.sound;
+      render();
+    }
+  });
+  return {
+    show(params) {
+      const topic = params.get("topic");
+      if (presets[topic] && topic !== state.topic && !busy) {
+        state.topic = topic;
+        render();
+      }
+      scene?.resume?.();
+    },
+    hide() {
+      resultPopover.hide();
+      scene?.pause?.();
+    },
+  };
+}

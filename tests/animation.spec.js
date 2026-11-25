@@ -3,9 +3,10 @@ import { test, expect } from "@playwright/test";
 test("physical animation progresses before showing an inline matching result", async ({
   page,
 }) => {
+  test.setTimeout(60000);
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/apps/picker/");
+  await page.goto("/#/picker");
   const options = await page.locator(".selection-panel").boundingBox();
   const stage = await page.locator("#picker-scene").boundingBox();
   expect(options.y + options.height).toBeLessThan(stage.y);
@@ -15,6 +16,18 @@ test("physical animation progresses before showing an inline matching result", a
     "data-renderer",
     "webgl",
   );
+  // Record the transient popover instead of racing its short display window.
+  await page.evaluate(() => {
+    const popover = document.querySelector(".result-popover");
+    window.popoverShown = null;
+    new MutationObserver(() => {
+      if (popover.classList.contains("show"))
+        window.popoverShown = {
+          text: popover.querySelector("strong").textContent,
+          phase: document.querySelector("#picker-scene").dataset.phase,
+        };
+    }).observe(popover, { attributes: true });
+  });
   await page.locator("#start-pick").click();
   await expect(page.locator("#picker-scene")).toHaveAttribute(
     "data-phase",
@@ -23,7 +36,8 @@ test("physical animation progresses before showing an inline matching result", a
   await expect(page.locator("#scene-result")).toBeHidden();
   await expect(page.locator("#start-pick")).toBeDisabled();
   await expect(page.locator(".result-popover")).toBeHidden();
-  await expect(page.locator("#scene-result")).toBeVisible({ timeout: 10000 });
+  // Headless browsers render WebGL in software, which can run below real time.
+  await expect(page.locator("#scene-result")).toBeVisible({ timeout: 20000 });
   await expect(page.locator("#picker-scene")).toHaveAttribute(
     "data-phase",
     "result",
@@ -33,11 +47,13 @@ test("physical animation progresses before showing an inline matching result", a
     "data-visual-result",
     "visible",
   );
-  await expect(page.locator(".result-popover.show")).toBeVisible();
-  await expect(page.locator(".result-popover strong")).toHaveText(
-    await page.locator(".result-value").textContent(),
-  );
-  await expect(page.locator(".result-popover")).toBeHidden({ timeout: 5000 });
+  await expect
+    .poll(() => page.evaluate(() => window.popoverShown), { timeout: 8000 })
+    .toEqual({
+      text: await page.locator(".result-value").textContent(),
+      phase: "result",
+    });
+  await expect(page.locator(".result-popover")).toBeHidden({ timeout: 8000 });
   await expect(page.locator(".option-row.selected input")).toHaveValue(
     await page.locator(".result-value").textContent(),
   );

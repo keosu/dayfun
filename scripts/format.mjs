@@ -16,14 +16,17 @@ for (const name of await readdir("assets/js")) {
   });
   await writeFile(path, formatted);
 }
+for (const name of await readdir("assets/js/picker")) {
+  if (!name.endsWith(".js")) continue;
+  const path = `assets/js/picker/${name}`;
+  const source = await readFile(path, "utf8");
+  await writeFile(path, await prettier.format(source, { filepath: path }));
+}
 for (const path of [
   "assets/styles.css",
   "assets/compact.css",
   "assets/app.css",
-  "public/theme-init.js",
   "index.html",
-  "apps/picker/index.html",
-  "apps/kitchen/index.html",
   "vite.config.js",
   "playwright.config.js",
   "package.json",
@@ -33,6 +36,8 @@ for (const path of [
   "tests/sync.spec.js",
   "tests/animation.spec.js",
   "tests/theme.spec.js",
+  "scripts/tune-physics.mjs",
+  ".github/workflows/deploy.yml",
 ]) {
   const source = await readFile(path, "utf8");
   await writeFile(path, await prettier.format(source, { filepath: path }));

@@ -13,7 +13,7 @@ async function openSettings(page, tab = "preferences") {
   await page.locator(`[data-settings-tab="${tab}"]`).click();
 }
 async function createRecipe(page, name, photo = false) {
-  await page.goto("/apps/kitchen/");
+  await page.goto("/#/kitchen");
   await page.locator("#add-recipe").click();
   const form = page.locator("#recipe-form");
   await form.locator('[name="name"]').fill(name);
@@ -47,17 +47,21 @@ test("home links and all pages fit phone and desktop widths", async ({
   page,
 }) => {
   const errors = watchErrors(page);
-  for (const path of ["/", "/apps/picker/", "/apps/kitchen/"]) {
+  for (const [path, view] of [
+    ["/", "home"],
+    ["/#/picker", "picker"],
+    ["/#/kitchen", "kitchen"],
+  ]) {
     await page.goto(path);
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator(`[data-view="${view}"] h1`)).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBeTruthy();
-    await expect(page.locator("body")).toHaveAttribute(
-      "data-app",
-      path === "/" ? "home" : path.includes("picker") ? "picker" : "kitchen",
+    await expect(page.locator("body")).toHaveAttribute("data-app", view);
+    await expect(page.locator(`[data-nav="${view}"]`).first()).toHaveClass(
+      /active/,
     );
   }
   await expect(page.locator(".recipe-card")).toHaveCount(24);
@@ -70,10 +74,46 @@ test("home links and all pages fit phone and desktop widths", async ({
   expect(errors).toEqual([]);
 });
 
+test("switching tools stays in one document and keeps each view alive", async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await page.goto("/#/picker");
+  await page.locator('[data-topic="玩什么"]').click();
+  await expect(page.locator("#picker-scene")).toHaveAttribute(
+    "data-ready",
+    "true",
+  );
+  await page.evaluate(() => {
+    window.spaMarker = true;
+    window.pickerCanvas = document.querySelector("#picker-scene canvas");
+  });
+  await page.locator('[data-nav="kitchen"]:visible').first().click();
+  await expect(page).toHaveURL(/#\/kitchen$/);
+  await expect(page.locator('[data-view="kitchen"]')).toBeVisible();
+  await expect(page.locator('[data-view="picker"]')).toBeHidden();
+  await page.locator('[data-tab="favorites"]').click();
+  await page.goBack();
+  await expect(page.locator('[data-view="picker"]')).toBeVisible();
+  await expect(page.locator('[data-topic="玩什么"]')).toHaveClass(/active/);
+  expect(
+    await page.evaluate(
+      () =>
+        window.spaMarker === true &&
+        window.pickerCanvas === document.querySelector("#picker-scene canvas"),
+    ),
+  ).toBe(true);
+  await page.locator('[data-nav="kitchen"]:visible').first().click();
+  await expect(page.locator('[data-tab="favorites"]')).toHaveClass(/active/);
+  await page.locator('[data-nav="home"]:visible').first().click();
+  await expect(page.locator('[data-view="home"] h1')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("cuisine, ingredient search and recipe instructions work", async ({
   page,
 }) => {
-  await page.goto("/apps/kitchen/");
+  await page.goto("/#/kitchen");
   await page.locator('[data-cuisine="粤菜"]').click();
   await expect(page.locator(".recipe-card")).toHaveCount(2);
   await page.locator('[data-cuisine="全部"]').click();
@@ -94,7 +134,7 @@ test("all random modes use custom options and persist history", async ({
 }) => {
   const errors = watchErrors(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/apps/picker/");
+  await page.goto("/#/picker");
   await page.locator('[data-topic="自定义"]').click();
   await page.locator("#bulk-edit").click();
   await page.locator("#bulk-form textarea").fill("喝茶\n散步");
@@ -171,7 +211,7 @@ test("photo recipe, favorite and rating survive reload", async ({ page }) => {
 test("meal cart saves quantities and completed meal history", async ({
   page,
 }) => {
-  await page.goto("/apps/kitchen/");
+  await page.goto("/#/kitchen");
   await page.locator('[data-cart="tomato-egg"]').click();
   await page.locator('[data-cart="kung-pao"]').click();
   await page.locator('[data-tab="orders"]').click();
@@ -190,7 +230,7 @@ test("meal cart saves quantities and completed meal history", async ({
 test("backup exports without credentials, merges once and rejects malformed data", async ({
   page,
 }) => {
-  await page.goto("/apps/kitchen/");
+  await page.goto("/#/kitchen");
   await page.locator('[data-favorite="tomato-egg"]').click();
   await openSettings(page, "sync");
   await page.locator('#sync-form [name="url"]').fill("http://localhost:8788");
@@ -254,7 +294,7 @@ test("server sync transfers photos and propagates deletion between devices", asy
   const second = await secondContext.newPage();
   const secondErrors = watchErrors(second);
   try {
-    await second.goto("/apps/kitchen/?tab=own");
+    await second.goto("/#/kitchen?tab=own");
     await configureAndSync(second);
     const synced = second.locator(".recipe-card").filter({ hasText: name });
     await expect(synced).toHaveCount(1);
@@ -285,20 +325,22 @@ test("PWA manifests and all tools operate offline after installation cache", asy
   const errors = watchErrors(page);
   await page.goto("/");
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  const rootManifest = await (
-    await request.get("/manifest.webmanifest")
-  ).json();
-  expect(rootManifest.display).toBe("fullscreen");
-  for (const app of ["picker", "kitchen"]) {
-    const manifest = await (
-      await request.get(`/apps/${app}/manifest.webmanifest`)
-    ).json();
-    expect(manifest.id).toBe(`/apps/${app}/`);
-    expect(manifest.start_url).toBe(`/apps/${app}/`);
-    expect((await request.get(manifest.icons[0].src)).ok()).toBeTruthy();
-  }
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifest.display).toBe("fullscreen");
+  expect(manifest.start_url).toBe("./");
+  expect(manifest.shortcuts.map((item) => item.url)).toEqual([
+    "./#/picker",
+    "./#/kitchen",
+  ]);
+  for (const icon of [
+    ...manifest.icons,
+    ...manifest.shortcuts.flatMap((item) => item.icons),
+  ])
+    expect((await request.get(`/${icon.src}`)).ok()).toBeTruthy();
   await context.setOffline(true);
-  await page.goto("/apps/kitchen/?recipe=tomato-egg");
+  await page.reload();
+  await expect(page.locator('[data-view="home"] h1')).toBeVisible();
+  await page.goto("/#/kitchen?recipe=tomato-egg");
   await expect(page.locator(".modal-heading h2")).toHaveText("番茄炒蛋");
   await expect(page.locator(".detail-photo")).toBeVisible();
   expect(
@@ -307,7 +349,7 @@ test("PWA manifests and all tools operate offline after installation cache", asy
       .evaluate((image) => image.complete && image.naturalWidth > 0),
   ).toBeTruthy();
   await page.locator(".modal-close").click();
-  await page.goto("/apps/picker/");
+  await page.goto("/#/picker");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.locator("#sound-toggle").uncheck();
   await page.locator("#start-pick").click();

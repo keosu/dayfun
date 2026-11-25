@@ -8,7 +8,7 @@ for (const viewport of [{ width: 1440, height: 1100 }, { width: 390, height: 844
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  for (const [name, path] of [['home','/'], ['picker','/apps/picker/'], ['kitchen','/apps/kitchen/']]) {
+  for (const [name, path] of [['home','/'], ['picker','/#/picker'], ['kitchen','/#/kitchen']]) {
     await page.goto('http://localhost:4173'+path);
     await page.waitForTimeout(700);
     await page.screenshot({ path: `test-results/screenshots/${name}-${viewport.width}.png`, fullPage: true });

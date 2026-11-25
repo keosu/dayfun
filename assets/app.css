@@ -961,3 +961,31 @@ html::-webkit-scrollbar {
     transition: none;
   }
 }
+
+/* Single-page views: kept mounted, only the active one is shown. */
+.view[hidden] {
+  display: none !important;
+}
+.view-enter {
+  animation: view-in 0.18s ease-out;
+}
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-enter {
+    animation: none;
+  }
+}
+
+/* Capsule and pixel scenes reveal the answer near the floor; keep the popover above it. */
+.picker-playground:not([data-scene="wheel"]) .result-popover {
+  top: 15%;
+}

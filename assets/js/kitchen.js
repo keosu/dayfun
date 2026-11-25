@@ -1,5 +1,4 @@
 import {
-  shell,
   $,
   $$,
   modal,
@@ -8,13 +7,13 @@ import {
   dateLabel,
   safeImage,
   emptyState,
+  asset,
 } from "./ui.js";
 import { icon } from "./icons.js";
 import { recipes, cuisines } from "./recipes.js";
 import { list, get, put, remove, changeEvent } from "./storage.js";
 import { compressPhoto } from "./photos.js";
 
-const query = new URLSearchParams(location.search);
 const tabs = [
   { id: "public", text: "公共菜谱", icon: "book" },
   { id: "own", text: "我的厨房", icon: "camera" },
@@ -22,9 +21,7 @@ const tabs = [
   { id: "orders", text: "点菜清单", icon: "bag" },
   { id: "records", text: "美味记录", icon: "history" },
 ];
-let tab = tabs.some((item) => item.id === query.get("tab"))
-  ? query.get("tab")
-  : "public";
+let tab = "public";
 let cuisine = "全部";
 let search = "";
 let sort = "recommended";
@@ -34,70 +31,68 @@ let own = [],
   orders = [],
   cart = { items: [] };
 
-shell(
-  "kitchen",
-  /* HTML */ `
-    <div class="page-intro kitchen-intro">
-      <a class="breadcrumb" href="/">${icon("back")} 返回工具首页</a>
-      <div class="intro-row">
-        <div>
-          <span class="eyebrow orange-text">A LITTLE TASTE OF LIFE</span>
-          <h1>今天吃什么 <span class="title-doodle orange-text">✺</span></h1>
-          <p>好好吃饭，是对平凡生活最温柔的热爱。</p>
-        </div>
-        <div class="kitchen-actions">
-          <button class="button primary" id="add-recipe">
-            ${icon("plus")} 记录我的菜</button
-          ><button class="icon-button" id="photo-credits" aria-label="图片来源">
-            ${icon("info")}
-          </button>
-        </div>
+const template = () => /* HTML */ `
+  <div class="page-intro kitchen-intro">
+    <a class="breadcrumb" href="#/">${icon("back")} 返回工具首页</a>
+    <div class="intro-row">
+      <div>
+        <span class="eyebrow orange-text">A LITTLE TASTE OF LIFE</span>
+        <h1>今天吃什么 <span class="title-doodle orange-text">✺</span></h1>
+        <p>好好吃饭，是对平凡生活最温柔的热爱。</p>
+      </div>
+      <div class="kitchen-actions">
+        <button class="button primary" id="add-recipe">
+          ${icon("plus")} 记录我的菜</button
+        ><button class="icon-button" id="photo-credits" aria-label="图片来源">
+          ${icon("info")}
+        </button>
       </div>
     </div>
-    <section class="kitchen-banner">
-      <div class="kitchen-banner-copy">
-        <span>${icon("sun")} 人间烟火，最是治愈</span>
-        <h2>把日子，过成喜欢的味道<span>。</span></h2>
-        <p>从各地经典到你的拿手好菜，每一道都有故事。</p>
-        <div class="banner-tags">
-          <span>八大菜系</span><i>·</i><span>家常好味</span><i>·</i
-          ><span>独家记忆</span>
-        </div>
-      </div>
-      <div class="banner-food" aria-hidden="true">
-        <div class="banner-food-circle"></div>
-        <img src="/images/kung-pao.jpg" alt="" /><span class="banner-sticker"
-          >用心做<br />慢慢吃 ♡</span
-        ><span class="banner-leaf">❧</span>
-      </div>
-    </section>
-    <nav class="kitchen-tabs" aria-label="厨房分类">
-      ${tabs.map((item) => /* HTML */ `<button data-tab="${item.id}" class="kitchen-tab">${icon(item.icon)} ${item.text}${item.id === "orders" ? '<span id="cart-count" class="count-badge">0</span>' : ""}</button>`).join("")}
-    </nav>
-    <div id="catalog-toolbar">
-      <div class="catalog-topline">
-        <h2 id="catalog-title">发现好味道 <span id="recipe-total"></span></h2>
-        <div class="catalog-tools">
-          <label class="search-field"
-            >${icon("search")}<input
-              type="search"
-              id="recipe-search"
-              placeholder="搜菜名、食材或地方…"
-              aria-label="搜索菜谱" /></label
-          ><select id="recipe-sort" aria-label="菜谱排序">
-            <option value="recommended">推荐排序</option>
-            <option value="quick">用时最短</option>
-            <option value="rating">我的评分</option>
-          </select>
-        </div>
-      </div>
-      <div class="cuisine-filters" aria-label="按菜系筛选">
-        ${cuisines.map((item) => /* HTML */ `<button data-cuisine="${item}" class="cuisine-chip">${item}</button>`).join("")}
+  </div>
+  <section class="kitchen-banner">
+    <div class="kitchen-banner-copy">
+      <span>${icon("sun")} 人间烟火，最是治愈</span>
+      <h2>把日子，过成喜欢的味道<span>。</span></h2>
+      <p>从各地经典到你的拿手好菜，每一道都有故事。</p>
+      <div class="banner-tags">
+        <span>八大菜系</span><i>·</i><span>家常好味</span><i>·</i
+        ><span>独家记忆</span>
       </div>
     </div>
-    <section id="kitchen-content" aria-live="polite"></section>
-  `,
-);
+    <div class="banner-food" aria-hidden="true">
+      <div class="banner-food-circle"></div>
+      <img src="${asset("/images/kung-pao.jpg")}" alt="" /><span
+        class="banner-sticker"
+        >用心做<br />慢慢吃 ♡</span
+      ><span class="banner-leaf">❧</span>
+    </div>
+  </section>
+  <nav class="kitchen-tabs" aria-label="厨房分类">
+    ${tabs.map((item) => /* HTML */ `<button data-tab="${item.id}" class="kitchen-tab">${icon(item.icon)} ${item.text}${item.id === "orders" ? '<span id="cart-count" class="count-badge">0</span>' : ""}</button>`).join("")}
+  </nav>
+  <div id="catalog-toolbar">
+    <div class="catalog-topline">
+      <h2 id="catalog-title">发现好味道 <span id="recipe-total"></span></h2>
+      <div class="catalog-tools">
+        <label class="search-field"
+          >${icon("search")}<input
+            type="search"
+            id="recipe-search"
+            placeholder="搜菜名、食材或地方…"
+            aria-label="搜索菜谱" /></label
+        ><select id="recipe-sort" aria-label="菜谱排序">
+          <option value="recommended">推荐排序</option>
+          <option value="quick">用时最短</option>
+          <option value="rating">我的评分</option>
+        </select>
+      </div>
+    </div>
+    <div class="cuisine-filters" aria-label="按菜系筛选">
+      ${cuisines.map((item) => /* HTML */ `<button data-cuisine="${item}" class="cuisine-chip">${item}</button>`).join("")}
+    </div>
+  </div>
+  <section id="kitchen-content" aria-live="polite"></section>
+`;
 
 async function loadData() {
   const results = await Promise.all([
@@ -263,53 +258,57 @@ function render() {
   $("#empty-add")?.addEventListener("click", () => recipeForm());
 }
 
-$$(".kitchen-tab").forEach(
-  (button) =>
-    (button.onclick = () => {
-      tab = button.dataset.tab;
-      cuisine = "全部";
-      search = "";
-      $("#recipe-search").value = "";
-      const url = new URL(location.href);
-      url.searchParams.set("tab", tab);
-      url.searchParams.delete("recipe");
-      history.replaceState({}, "", url);
-      render();
-    }),
-);
-$$(".cuisine-chip").forEach(
-  (button) =>
-    (button.onclick = () => {
-      cuisine = button.dataset.cuisine;
-      render();
-    }),
-);
-$("#recipe-search").oninput = (event) => {
-  search = event.target.value.trim();
+function selectTab(id) {
+  tab = id;
+  cuisine = "全部";
+  search = "";
+  $("#recipe-search").value = "";
+  history.replaceState(
+    null,
+    "",
+    id === "public" ? "#/kitchen" : `#/kitchen?tab=${id}`,
+  );
   render();
-};
-$("#recipe-sort").onchange = (event) => {
-  sort = event.target.value;
-  render();
-};
-$("#add-recipe").onclick = () => recipeForm();
-$("#kitchen-content").addEventListener("click", async (event) => {
-  const open = event.target.closest("[data-open]");
-  if (open) {
-    showRecipe(open.dataset.open);
-    return;
-  }
-  const favorite = event.target.closest("[data-favorite]");
-  if (favorite) {
-    await toggleFavorite(favorite.dataset.favorite);
-    return;
-  }
-  const add = event.target.closest("[data-cart]");
-  if (add) {
-    await toggleCart(add.dataset.cart);
-    return;
-  }
-});
+}
+function bindEvents() {
+  $$(".kitchen-tab").forEach(
+    (button) => (button.onclick = () => selectTab(button.dataset.tab)),
+  );
+  $$(".cuisine-chip").forEach(
+    (button) =>
+      (button.onclick = () => {
+        cuisine = button.dataset.cuisine;
+        render();
+      }),
+  );
+  $("#recipe-search").oninput = (event) => {
+    search = event.target.value.trim();
+    render();
+  };
+  $("#recipe-sort").onchange = (event) => {
+    sort = event.target.value;
+    render();
+  };
+  $("#add-recipe").onclick = () => recipeForm();
+  $("#photo-credits").onclick = showCredits;
+  $("#kitchen-content").addEventListener("click", async (event) => {
+    const open = event.target.closest("[data-open]");
+    if (open) {
+      showRecipe(open.dataset.open);
+      return;
+    }
+    const favorite = event.target.closest("[data-favorite]");
+    if (favorite) {
+      await toggleFavorite(favorite.dataset.favorite);
+      return;
+    }
+    const add = event.target.closest("[data-cart]");
+    if (add) {
+      await toggleCart(add.dataset.cart);
+      return;
+    }
+  });
+}
 async function toggleFavorite(id) {
   if (favorites.has(id)) {
     await remove(`favorite:${id}`);
@@ -838,10 +837,7 @@ function renderOrders() {
       }
     </aside>
   </div>`;
-  $("#browse-recipes")?.addEventListener("click", () => {
-    tab = "public";
-    render();
-  });
+  $("#browse-recipes")?.addEventListener("click", () => selectTab("public"));
   $$("[data-quantity]").forEach(
     (button) =>
       (button.onclick = async () => {
@@ -971,10 +967,7 @@ function renderRecords() {
               '<button class="button primary" id="record-browse">选一道菜，开始做饭</button>',
           })
     }`;
-  $("#record-browse")?.addEventListener("click", () => {
-    tab = "public";
-    render();
-  });
+  $("#record-browse")?.addEventListener("click", () => selectTab("public"));
   $$(".delete-review").forEach(
     (button) =>
       (button.onclick = async () => {
@@ -985,9 +978,9 @@ function renderRecords() {
       }),
   );
 }
-$("#photo-credits").onclick = async () => {
+async function showCredits() {
   try {
-    const credits = await (await fetch("/images/credits.json")).json();
+    const credits = await (await fetch(asset("/images/credits.json"))).json();
     modal({
       title: "好味道背后的镜头",
       content: /* HTML */ `<p class="muted">
@@ -1016,13 +1009,38 @@ $("#photo-credits").onclick = async () => {
   } catch {
     toast("图片来源暂时无法读取，请稍后再试。");
   }
-};
-await loadData();
-render();
-if (query.get("recipe")) showRecipe(query.get("recipe"));
-window.addEventListener(changeEvent, async (event) => {
-  if (event.detail.type === "merge") {
-    await loadData();
-    render();
-  }
-});
+}
+
+export async function mount(root) {
+  root.innerHTML = template();
+  bindEvents();
+  await loadData();
+  render();
+  window.addEventListener(changeEvent, async (event) => {
+    if (event.detail.type === "merge") {
+      await loadData();
+      render();
+    }
+  });
+  return {
+    show(params) {
+      const requested = params.get("tab");
+      if (tabs.some((item) => item.id === requested) && requested !== tab) {
+        tab = requested;
+        cuisine = "全部";
+        search = "";
+        $("#recipe-search").value = "";
+        render();
+      }
+      const recipe = params.get("recipe");
+      if (recipe) {
+        history.replaceState(
+          null,
+          "",
+          tab === "public" ? "#/kitchen" : `#/kitchen?tab=${tab}`,
+        );
+        showRecipe(recipe);
+      }
+    },
+  };
+}

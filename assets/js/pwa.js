@@ -10,7 +10,9 @@ export async function initPWA() {
   if (import.meta.env.DEV) return;
   if (!("serviceWorker" in navigator)) return;
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js");
+    const registration = await navigator.serviceWorker.register(
+      `${import.meta.env.BASE_URL}sw.js`,
+    );
     navigator.serviceWorker.addEventListener("message", (event) => {
       if (event.data?.type === "OFFLINE_READY") {
         offlineReady = true;

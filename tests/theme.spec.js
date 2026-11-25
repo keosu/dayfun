@@ -5,7 +5,7 @@ test("theme preference persists across tools and updates the 3D scene", async ({
 }) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/apps/picker/");
+  await page.goto("/#/picker");
   await page.locator(".header-actions .settings-trigger").click();
   await page.locator('[data-theme-choice="dark"]').click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -25,7 +25,7 @@ test("theme preference persists across tools and updates the 3D scene", async ({
   await page.locator(".modal-close").click();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.goto("/apps/kitchen/");
+  await page.goto("/#/kitchen");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.locator(".header-actions .settings-trigger").click();
   await page.locator('[data-theme-choice="light"]').click();
@@ -48,7 +48,7 @@ test("launcher fits without vertical scrolling and the scroll thumb fades", asyn
     ),
   ).toBe(true);
   await expect(page.locator("footer")).toHaveCount(0);
-  await page.goto("/apps/kitchen/");
+  await page.goto("/#/kitchen");
   await page.locator('[data-open="tomato-egg"]').first().click();
   await page.locator("dialog").evaluate((element) => {
     element.scrollTop = element.scrollHeight;

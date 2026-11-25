@@ -1,36 +1,10 @@
-/* Production builds inject every local asset into this list. */
-const VERSION = "little-day-v1-dev";
-const PRECACHE = /* BUILD_PRECACHE */ [
-  "/",
-  "/index.html",
-  "/apps/picker/",
-  "/apps/picker/index.html",
-  "/apps/kitchen/",
-  "/apps/kitchen/index.html",
-  "/assets/styles.css",
-  "/assets/js/home.js",
-  "/assets/js/picker.js",
-  "/assets/js/kitchen.js",
-  "/assets/js/recipes.js",
-  "/assets/js/ui.js",
-  "/assets/js/icons.js",
-  "/assets/js/storage.js",
-  "/assets/js/records.js",
-  "/assets/js/pwa.js",
-  "/assets/js/sync.js",
-  "/assets/js/photos.js",
-  "/assets/js/picker-scenes.js",
-  "/manifest.webmanifest",
-  "/apps/picker/manifest.webmanifest",
-  "/apps/kitchen/manifest.webmanifest",
-  "/icons/icon.svg",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/images/credits.json",
-  "/images/home-food.jpg",
-  "/images/tomato-egg.jpg",
-  "/images/kung-pao.jpg",
-];
+/* Production builds inject every built file into this list. Paths are relative to this
+   worker, so the app works at a domain root or in a subdirectory such as GitHub Pages. */
+const VERSION = "little-day-v2-dev";
+const PRECACHE = /* BUILD_PRECACHE */ ["./", "manifest.webmanifest"];
+const SHELL = new URL("./", self.location).href;
+const SCOPE = new URL("./", self.location).pathname;
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
@@ -58,42 +32,49 @@ self.addEventListener("fetch", (event) => {
   if (
     request.method !== "GET" ||
     url.origin !== self.location.origin ||
-    url.pathname.startsWith("/api/") ||
-    url.pathname === "/health"
+    !url.pathname.startsWith(SCOPE)
   )
     return;
+  // Single-page app: every navigation is the same shell. Serve it from cache for an instant
+  // start and refresh the cached copy in the background.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
-        try {
-          return await fetch(request);
-        } catch {
-          const path = url.pathname.endsWith("/")
-            ? `${url.pathname}index.html`
-            : url.pathname;
-          return (
-            (await caches.match(path)) ||
-            new Response("此页面尚未缓存，请联网访问一次。", {
-              status: 503,
-              headers: { "Content-Type": "text/plain;charset=utf-8" },
-            })
-          );
+        const cache = await caches.open(VERSION);
+        const cached = await cache.match(SHELL);
+        const network = fetch(request)
+          .then((response) => {
+            if (response.ok && url.pathname === SCOPE)
+              cache.put(SHELL, response.clone());
+            return response;
+          })
+          .catch(() => null);
+        if (cached) {
+          event.waitUntil(network);
+          return cached;
         }
+        return (
+          (await network) ||
+          new Response("此页面尚未缓存，请联网访问一次。", {
+            status: 503,
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+          })
+        );
       })(),
     );
     return;
   }
   event.respondWith(
     (async () => {
-      // Vite / static hosts can send Vary: Origin. Module requests include Origin,
-      // while precache requests do not; our fixed local assets are identical.
+      // Static hosts can send Vary: Origin. Module requests include Origin, while
+      // precache requests do not; our fixed local assets are identical.
       const cached = await caches.match(request, {
         ignoreSearch: true,
         ignoreVary: true,
       });
       if (cached) return cached;
       const response = await fetch(request);
-      if (response.ok && !url.pathname.startsWith("/@")) {
+      if (response.ok && !url.pathname.includes("/@")) {
         const cache = await caches.open(VERSION);
         await cache.put(request, response.clone());
       }

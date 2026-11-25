@@ -62,7 +62,7 @@ test("simultaneous deletes win edits regardless of synchronization order", async
 test("local edits in the same millisecond have increasing timestamps", async ({
   page,
 }) => {
-  await page.goto("/apps/kitchen/");
+  await page.goto("/#/kitchen");
   await page.evaluate(() => {
     window.testOriginalNow = Date.now;
     Date.now = () => 1000;

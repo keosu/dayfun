@@ -109,35 +109,3 @@ export async function animateScene(container, mode, winner, count) {
   }
   container.classList.remove("spinning");
 }
-
-export function playSound(enabled, final = false) {
-  if (!enabled) return;
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const context = new AudioContext();
-    const notes = final ? [523, 659, 784, 1047] : [440, 554, 659];
-    notes.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.value = frequency;
-      gain.gain.setValueAtTime(0, context.currentTime + index * 0.1);
-      gain.gain.linearRampToValueAtTime(
-        0.07,
-        context.currentTime + index * 0.1 + 0.02,
-      );
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        context.currentTime + index * 0.1 + 0.22,
-      );
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(context.currentTime + index * 0.1);
-      oscillator.stop(context.currentTime + index * 0.1 + 0.24);
-    });
-    setTimeout(() => context.close(), 1200);
-  } catch {
-    /* Audio is optional and browser dependent. */
-  }
-}

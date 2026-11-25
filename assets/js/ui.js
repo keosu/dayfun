@@ -24,12 +24,17 @@ export function escapeHTML(value = "") {
       ],
   );
 }
+// Stored records keep root-style paths ("/images/x.jpg"); the site itself may live in a subdirectory.
+export function asset(path) {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
+}
 export function safeImage(value) {
+  if (typeof value === "string" && /^\/images\/[a-z\d-]+\.jpg$/.test(value))
+    return asset(value);
   return typeof value === "string" &&
-    (/^\/images\/[a-z\d-]+\.jpg$/.test(value) ||
-      /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(value))
+    /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(value)
     ? value
-    : "/images/home-food.jpg";
+    : asset("/images/home-food.jpg");
 }
 export function dateLabel(timestamp) {
   const date = new Date(timestamp);
@@ -37,32 +42,32 @@ export function dateLabel(timestamp) {
   return `${today ? "今天" : `${date.getMonth() + 1}月${date.getDate()}日`} ${date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
 }
 
-const links = [
-  { id: "home", label: "工具首页", short: "首页", href: "/", icon: "grid" },
+export const links = [
+  { id: "home", label: "工具首页", short: "首页", href: "#/", icon: "grid" },
   {
     id: "picker",
     label: "随心选",
     short: "随心选",
-    href: "/apps/picker/",
+    href: "#/picker",
     icon: "shuffle",
   },
   {
     id: "kitchen",
     label: "今天吃什么",
     short: "小厨房",
-    href: "/apps/kitchen/",
+    href: "#/kitchen",
     icon: "bowl",
   },
 ];
-export function shell(page, content) {
+export function initShell() {
   $("#app").innerHTML = /* HTML */ ` <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="/" aria-label="小日子首页"
+        <a class="brand" href="#/" aria-label="小日子首页"
           ><span class="brand-mark"><i></i><i></i><i></i><i></i></span
           ><span>小日子<small>LITTLE DAY</small></span></a
         >
         <nav class="desktop-nav" aria-label="主导航">
-          ${links.map((link) => /* HTML */ `<a href="${link.href}" class="${page === link.id ? "active" : ""}" ${page === link.id ? 'aria-current="page"' : ""}>${icon(link.icon)}${link.label}</a>`).join("")}
+          ${links.map((link) => /* HTML */ `<a href="${link.href}" data-nav="${link.id}">${icon(link.icon)}${link.label}</a>`).join("")}
         </nav>
         <div class="header-actions">
           <span class="local-badge" id="local-badge"
@@ -74,9 +79,9 @@ export function shell(page, content) {
         </div>
       </div>
     </header>
-    <main class="page ${page}-page">${content}</main>
+    <main class="page" id="main"></main>
     <nav class="bottom-nav" aria-label="移动端导航">
-      ${links.map((link) => /* HTML */ `<a href="${link.href}" class="${page === link.id ? "active" : ""}" ${page === link.id ? 'aria-current="page"' : ""}>${icon(link.icon)}<span>${link.short}</span></a>`).join("")}<button
+      ${links.map((link) => /* HTML */ `<a href="${link.href}" data-nav="${link.id}">${icon(link.icon)}<span>${link.short}</span></a>`).join("")}<button
         class="settings-trigger"
       >
         ${icon("settings")}<span>设置</span>
@@ -108,6 +113,16 @@ export function shell(page, content) {
   initScrollbars();
   startAutoSync();
   updateBadge();
+}
+export function setActivePage(page) {
+  $("#main").className = `page ${page}-page`;
+  document.body.dataset.app = page;
+  $$("[data-nav]").forEach((link) => {
+    const active = link.dataset.nav === page;
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
 }
 function updateBadge() {
   $("#local-badge").lastElementChild.textContent = navigator.onLine

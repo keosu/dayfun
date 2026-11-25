@@ -3,7 +3,7 @@ const browser = await chromium.launch();
 for (const [width,height] of [[320,740],[390,844],[600,900],[768,1024],[844,390],[1440,1000]]) {
   const page = await browser.newPage({viewport:{width,height}});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  for (const path of ['/','/apps/picker/','/apps/kitchen/']) {
+  for (const path of ['/','/#/picker','/#/kitchen']) {
     await page.goto('http://localhost:4173'+path);
     await page.locator('h1').waitFor();
     const overflow = await page.evaluate(()=>document.documentElement.scrollWidth > innerWidth);
