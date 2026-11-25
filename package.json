@@ -1,0 +1,22 @@
+{
+  "name": "little-day-apps",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "sync-server": "node server/sync-server.mjs",
+    "test": "playwright test",
+    "format": "node scripts/format.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "prettier": "^3.10.1",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  }
+}

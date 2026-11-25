@@ -1,0 +1,27 @@
+{
+  "id": "/apps/kitchen/",
+  "name": "今天吃什么 · 我的小厨房",
+  "short_name": "今天吃什么",
+  "description": "发现经典菜谱，拍照记住拿手菜，记录每一餐的好味道",
+  "lang": "zh-CN",
+  "start_url": "/apps/kitchen/",
+  "scope": "/apps/kitchen/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#f7f6f2",
+  "theme_color": "#f7f6f2",
+  "icons": [
+    {
+      "src": "/icons/kitchen-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/kitchen-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

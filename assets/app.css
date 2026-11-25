@@ -1,0 +1,963 @@
+/* Compact application surfaces, transient scroll thumbs, and both color modes. */
+:root {
+  --panel: #fff;
+  --field: #f8f7f3;
+  --subtle: #eeece6;
+  --soft-text: #8e8b80;
+  --scene-wheel: #eee9f3;
+  --scene-capsule: #f3e8e9;
+  --scene-pixel: #e9eee3;
+  --glass: rgba(255, 255, 255, 0.68);
+  --scroll-thumb: rgba(115, 106, 132, 0.3);
+}
+:root * {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+*::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+  background: transparent;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9px;
+}
+.is-scrolling {
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+.is-scrolling::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+}
+.site-footer,
+.home-bottom-note,
+.footer-note {
+  display: none;
+}
+.page {
+  padding-bottom: 12px;
+}
+.site-header {
+  background: var(--paper);
+}
+.launcher-hero {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 21px;
+  gap: 18px;
+}
+.launcher-hero .greeting {
+  margin: 0 0 8px;
+}
+.launcher-hero h1 {
+  font-size: 28px;
+  line-height: 1.3;
+  letter-spacing: -1px;
+}
+.launcher-hero .coral-word {
+  padding: 0;
+}
+.launcher-hero .coral-word svg {
+  display: none;
+}
+.launcher-hero .hero-copy > p {
+  margin-top: 8px;
+  font-size: 11px;
+}
+.launcher-sun {
+  background: #edce78;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #7c6b46;
+  transform: rotate(-12deg);
+  box-shadow: inset -5px -6px #caa95920;
+}
+.launcher-sun > span:first-child {
+  font-size: 30px;
+  line-height: 0.8;
+}
+.launcher-sun > span:last-child {
+  font-size: 31px;
+  line-height: 0.8;
+}
+.launcher-grid .tool-content h3 {
+  margin-top: 10px;
+}
+.launcher-grid .tool-card {
+  min-height: 208px;
+}
+.launcher-grid .card-wheel-art {
+  pointer-events: none;
+}
+.launcher-recent {
+  margin-top: 21px;
+}
+.launcher-recent .section-heading h2 {
+  font-size: 17px;
+}
+.launcher-recent #recent-activity {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+}
+.launcher-recent .activity {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 10px 12px;
+  border-radius: 10px;
+  min-width: 200px;
+  flex: 1;
+}
+.launcher-recent .activity strong {
+  font-size: 11px;
+}
+.launcher-recent .activity > div > span {
+  font-size: 9px;
+}
+.launcher-recent .activity:last-child {
+  border: 1px solid var(--line);
+}
+.settings-modal {
+  max-width: 440px;
+}
+.settings-modal .modal-heading {
+  padding: 13px 15px 10px;
+}
+.settings-modal .modal-heading h2 {
+  font-size: 18px;
+}
+.settings-modal .modal-content {
+  padding: 10px 14px 14px;
+}
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--field);
+  border-radius: 9px;
+  padding: 4px;
+  margin-bottom: 9px;
+}
+.settings-tabs > button {
+  flex: 1;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 11px;
+  color: var(--soft-text);
+  min-height: 31px;
+}
+.settings-tabs > button[aria-selected="true"] {
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 2px 5px #33333307;
+  font-weight: 650;
+}
+.settings-pane {
+  padding: 0;
+}
+.settings-row {
+  min-height: 47px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.settings-row > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.settings-row > span > .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--soft-text);
+}
+.settings-row .button {
+  transition: transform 0.2s;
+  min-height: 30px;
+  font-size: 10px;
+  padding: 6px 10px;
+  border-radius: 7px;
+}
+.theme-choices {
+  display: flex;
+  gap: 3px;
+  background: var(--field);
+  padding: 3px;
+  border-radius: 7px;
+}
+.theme-choices > button {
+  font-size: 10px;
+  color: var(--soft-text);
+  padding: 5px 8px;
+  border-radius: 5px;
+  min-height: 28px;
+  white-space: nowrap;
+}
+.theme-choices > button[aria-pressed="true"] {
+  background: #eae0f4;
+  color: #8662a9;
+  font-weight: 600;
+}
+.settings-note {
+  font-size: 9px;
+  line-height: 1.6;
+  color: var(--soft-text);
+  margin-top: 9px;
+}
+.storage-summary {
+  display: flex;
+  gap: 13px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  background: var(--field);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 10px;
+  color: var(--soft-text);
+  margin: 4px 0 5px;
+}
+.storage-summary b {
+  font-weight: 650;
+  color: var(--ink);
+  margin-left: 3px;
+}
+.settings-pane #sync-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 10px;
+  margin-top: 12px;
+}
+.settings-pane .field {
+  min-width: 0;
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+.settings-pane .field > input {
+  min-height: 38px;
+  font-size: 14px;
+  margin-top: 5px;
+}
+.settings-pane .checkbox-field,
+.settings-pane .button-row,
+.settings-pane .form-status {
+  grid-column: 1/-1;
+}
+.settings-pane .checkbox-field {
+  font-size: 11px;
+}
+.settings-pane .button-row {
+  margin: 12px 0 0;
+}
+.settings-pane .form-status {
+  font-size: 10px;
+  margin: 9px 0 2px;
+}
+.settings-pane .button-row > .button {
+  min-height: 34px;
+  font-size: 11px;
+}
+.picker-playground {
+  position: relative;
+}
+.scene-view-hint {
+  opacity: 0.7;
+}
+.scene-result {
+  padding: 8px 12px;
+  animation-duration: 0.22s;
+}
+.scene-result .result-value {
+  font-size: 17px;
+}
+.compact-picker .playground-bottom > p {
+  display: none;
+}
+.compact-picker .playground-bottom {
+  justify-content: center;
+  padding: 9px 12px;
+}
+.compact-picker .pick-button {
+  min-height: 39px;
+  width: 190px;
+}
+.result-popover {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translate(-50%, 5px);
+  min-width: 204px;
+  max-width: 85%;
+  border: 1px solid #ffffff80;
+  border-radius: 16px;
+  padding: 17px 23px;
+  text-align: center;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 36px #35233d16;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.28s,
+    transform 0.28s;
+}
+.result-popover.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.result-popover span {
+  display: block;
+  font-size: 10px;
+  color: var(--soft-text);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.result-popover strong {
+  font-size: 25px;
+  color: var(--purple);
+  font-weight: 750;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.result-popover:before {
+  content: "✦";
+  color: #cab787;
+  position: absolute;
+  left: 13px;
+  top: 11px;
+  font-size: 12px;
+}
+.kitchen-actions {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.kitchen-actions .icon-button {
+  width: 29px;
+  height: 29px;
+  color: var(--soft-text);
+}
+.kitchen-actions .icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* Dark mode recolors the whole interface, including dialogs and photographs' labels. */
+:root[data-theme="dark"] {
+  --paper: #171a22;
+  --surface: #21252f;
+  --panel: #21252f;
+  --field: #282c37;
+  --subtle: #292e39;
+  --ink: #e8e5df;
+  --muted: #9399a6;
+  --soft-text: #9ba1b0;
+  --line: #333845;
+  --coral: #d98580;
+  --purple: #bea2db;
+  --orange: #dba278;
+  --mint: #a1b7a7;
+  --shadow: 0 8px 26px #0000000f;
+  --scene-wheel: #242130;
+  --scene-capsule: #2a222b;
+  --scene-pixel: #1f2c27;
+  --glass: rgba(38, 41, 53, 0.72);
+  --scroll-thumb: rgba(183, 175, 202, 0.3);
+}
+[data-theme="dark"] .desktop-nav a.active,
+[data-theme="dark"] .desktop-nav a:hover,
+[data-theme="dark"] .header-actions > .icon-button {
+  background: var(--subtle);
+  color: var(--ink);
+}
+[data-theme="dark"] .bottom-nav {
+  background: #1c202aeb;
+  border-color: var(--line);
+  box-shadow: 0 -4px 20px #0002;
+}
+[data-theme="dark"] .bottom-nav > a,
+[data-theme="dark"] .bottom-nav > button {
+  color: #9097a7;
+}
+[data-theme="dark"] .bottom-nav .active,
+[data-theme="dark"] .kitchen-page ~ .bottom-nav .active {
+  background: #32283f;
+  color: #c2a5e4;
+}
+[data-theme="dark"] .greeting,
+[data-theme="dark"] .hero-copy > p,
+[data-theme="dark"] .intro-row p,
+[data-theme="dark"] .breadcrumb,
+[data-theme="dark"] .section-note {
+  color: var(--soft-text);
+}
+[data-theme="dark"] .launcher-sun {
+  background: #b7a065;
+  color: #3e3629;
+}
+[data-theme="dark"] .picker-card {
+  background: #30293f;
+}
+[data-theme="dark"] .kitchen-card {
+  background: #3c2d27;
+}
+[data-theme="dark"] .tool-content h3 {
+  color: var(--ink);
+}
+[data-theme="dark"] .tool-content > p,
+[data-theme="dark"] .kitchen-card .tool-content > p {
+  color: #b4a9bb;
+}
+[data-theme="dark"] .app-category,
+[data-theme="dark"] .picker-card .enter-app {
+  color: #c1aad6;
+}
+[data-theme="dark"] .kitchen-card .app-category,
+[data-theme="dark"] .kitchen-card .enter-app {
+  color: #d0aa85;
+}
+[data-theme="dark"] .enter-app {
+  background: #ffffff0c;
+  box-shadow: none;
+  border: 1px solid #ffffff12;
+}
+[data-theme="dark"] .feature-pills span {
+  color: #baa5cd;
+  border-color: #baa5cd35;
+}
+[data-theme="dark"] .kitchen-card .feature-pills span {
+  color: #c9aa89;
+  border-color: #c9aa8930;
+}
+[data-theme="dark"] .mini-wheel {
+  filter: brightness(0.79);
+  border-color: #ffffff30;
+}
+[data-theme="dark"] .hero-food,
+[data-theme="dark"] .banner-food > img {
+  border-color: #d3bba945;
+  filter: brightness(0.88);
+}
+[data-theme="dark"] .mini-hub {
+  background: #d7cbe5;
+  color: #705886;
+}
+[data-theme="dark"] .panel,
+[data-theme="dark"] .recipe-card,
+[data-theme="dark"] .review-card,
+[data-theme="dark"] .meal-card,
+[data-theme="dark"] .records-stats > div,
+[data-theme="dark"] .search-field,
+[data-theme="dark"] .button.secondary {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--ink);
+}
+[data-theme="dark"] .button.dark {
+  background: #bda1d8;
+  color: #1e1a25;
+}
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-heading {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+[data-theme="dark"] .modal::backdrop {
+  background: #07091269;
+}
+[data-theme="dark"] .modal-heading > .icon-button,
+[data-theme="dark"] .icon-button:hover {
+  background: var(--subtle);
+  color: var(--ink);
+}
+[data-theme="dark"] .field {
+  color: #b8bcc8;
+}
+[data-theme="dark"] .field > input,
+[data-theme="dark"] .field > textarea,
+[data-theme="dark"] .field > select {
+  background: var(--field);
+  color: var(--ink);
+  border-color: var(--line);
+}
+[data-theme="dark"] .field > input::placeholder,
+[data-theme="dark"] .field > textarea::placeholder,
+[data-theme="dark"] .search-field input::placeholder {
+  color: #8d93a1;
+}
+[data-theme="dark"] .theme-choices > button[aria-pressed="true"] {
+  background: #40334f;
+  color: #d3b7f0;
+}
+[data-theme="dark"] .fine-print,
+[data-theme="dark"] .muted,
+[data-theme="dark"] .checkbox-field,
+[data-theme="dark"] .modal-content > p {
+  color: var(--soft-text);
+}
+[data-theme="dark"] .photo-upload,
+[data-theme="dark"] .ingredient-list > label {
+  background: var(--field);
+  border-color: #655570;
+  color: #bdafcd;
+}
+[data-theme="dark"] .detail-meta,
+[data-theme="dark"] .detail-description,
+[data-theme="dark"] .cooking-steps p {
+  color: #b0b5c2;
+}
+[data-theme="dark"] .detail-section,
+[data-theme="dark"] .own-recipe-actions,
+[data-theme="dark"] .history-row,
+[data-theme="dark"] .cart-item {
+  border-color: var(--line);
+}
+[data-theme="dark"] .cooking-steps > li > span,
+[data-theme="dark"] .history-symbol {
+  background: #3a2e41;
+  color: #cbb0e0;
+}
+[data-theme="dark"] .recipe-tip {
+  background: #28372e;
+  color: #adbea7;
+}
+[data-theme="dark"] .history-row > div > span,
+[data-theme="dark"] .recipe-description,
+[data-theme="dark"] .recipe-meta,
+[data-theme="dark"] .recipe-rating small,
+[data-theme="dark"] .review-body p,
+[data-theme="dark"] .review-date,
+[data-theme="dark"] .meal-card p {
+  color: var(--soft-text);
+}
+[data-theme="dark"] .kitchen-banner {
+  background: #342a25;
+}
+[data-theme="dark"] .kitchen-banner-copy h2 {
+  color: #ddc6b0;
+}
+[data-theme="dark"] .kitchen-banner-copy > span,
+[data-theme="dark"] .kitchen-banner-copy p,
+[data-theme="dark"] .banner-tags {
+  color: #ba9e86;
+}
+[data-theme="dark"] .banner-food-circle {
+  background: #4c382440;
+  border-color: #b293632b;
+}
+[data-theme="dark"] .banner-sticker {
+  background: #534331;
+  color: #dfc99f;
+}
+[data-theme="dark"] .kitchen-tabs {
+  border-color: var(--line);
+}
+[data-theme="dark"] .kitchen-tab {
+  color: #9e9aa0;
+}
+[data-theme="dark"] .kitchen-tab.active {
+  color: #d9aa83;
+}
+[data-theme="dark"] .cuisine-chip {
+  color: #a99f94;
+}
+[data-theme="dark"] .cuisine-chip.active {
+  background: #493629;
+  color: #dfba99;
+}
+[data-theme="dark"] .cuisine-chip:hover {
+  background: #322d29;
+}
+[data-theme="dark"] .recipe-card-bottom {
+  border-color: var(--line);
+}
+[data-theme="dark"] .recipe-cuisine {
+  background: #282d38df;
+  color: #e0c29e;
+}
+[data-theme="dark"] .favorite-button {
+  background: #282d38df;
+  color: #c7bccd;
+}
+[data-theme="dark"] .favorite-button.is-favorite {
+  color: #e9a09c;
+}
+[data-theme="dark"] .add-to-cart,
+[data-theme="dark"] .quantity-control {
+  background: #3b3026;
+  color: #d0ab82;
+}
+[data-theme="dark"] .add-to-cart.added {
+  background: #2c3b32;
+  color: #a1c49f;
+}
+[data-theme="dark"] .recipe-title-button > .icon {
+  color: #969aa7;
+}
+[data-theme="dark"] .empty-state {
+  background: #20242b;
+  border-color: var(--line);
+}
+[data-theme="dark"] .empty-state h3 {
+  color: var(--ink);
+}
+[data-theme="dark"] .empty-state p {
+  color: var(--soft-text);
+}
+[data-theme="dark"] .tag.neutral {
+  background: var(--subtle);
+  color: var(--soft-text);
+}
+[data-theme="dark"] .tag.peach,
+[data-theme="dark"] .stat-icon.peach {
+  background: #493629;
+  color: #d9b08c;
+}
+[data-theme="dark"] .tag.purple,
+[data-theme="dark"] .stat-icon.purple {
+  background: #3a3048;
+  color: #bea7d9;
+}
+[data-theme="dark"] .stat-icon.mint {
+  background: #2b3b31;
+  color: #a4b99c;
+}
+[data-theme="dark"] .compact-picker .selection-panel {
+  background: var(--panel);
+  border-color: var(--line);
+}
+[data-theme="dark"] .compact-picker .topic-chip {
+  background: #2b2c37;
+  color: #aaa1b6;
+}
+[data-theme="dark"] .compact-picker .topic-chip.active {
+  background: #44324f;
+  border-color: #69527b;
+  color: #d2b4ec;
+}
+[data-theme="dark"] .compact-picker .option-row {
+  background: #2b2734;
+  border-color: #3c3346;
+}
+[data-theme="dark"] .compact-picker .option-row input {
+  color: #c0aecf;
+}
+[data-theme="dark"] .compact-picker .option-row.selected {
+  background: #463156;
+  border-color: #a588bc;
+}
+[data-theme="dark"] .compact-picker .option-row.selected input {
+  color: #e0c6f4;
+}
+[data-theme="dark"] .compact-picker .add-option {
+  border-color: #665273;
+}
+[data-theme="dark"] .compact-picker .add-option input {
+  color: var(--ink);
+}
+[data-theme="dark"] .compact-picker .picker-playground {
+  background: var(--scene-wheel);
+  border-color: #403549;
+}
+[data-theme="dark"] .compact-picker:has(.scene-capsule) .picker-playground {
+  background: var(--scene-capsule);
+}
+[data-theme="dark"] .compact-picker:has(.scene-pixel) .picker-playground {
+  background: var(--scene-pixel);
+}
+[data-theme="dark"] .compact-picker .mode-tabs {
+  background: #22232dcc;
+}
+[data-theme="dark"] .compact-picker .mode-tab {
+  color: #a399b3;
+}
+[data-theme="dark"] .compact-picker .mode-tab.active {
+  background: #3c2d49;
+  color: #d0b6e8;
+}
+[data-theme="dark"] .scene-heading,
+[data-theme="dark"] .scene-view-hint {
+  color: #b8a5c9;
+}
+[data-theme="dark"] .compact-picker .playground-bottom {
+  background: #1b1e26b8;
+  border-color: #4a3b4e55;
+}
+[data-theme="dark"] .compact-picker .pick-button {
+  background: #8d6fab;
+  color: #fff;
+}
+[data-theme="dark"] .scene-result {
+  background: #272330;
+  border-color: #4a3b51;
+}
+[data-theme="dark"] .scene-result .result-value {
+  color: #d2b4ec;
+}
+[data-theme="dark"] .scene-result .result-topic {
+  color: #b09cc0;
+}
+[data-theme="dark"] .result-popover {
+  border-color: #c8b5da29;
+  box-shadow: 0 12px 30px #0004;
+}
+[data-theme="dark"] .toast {
+  background: #c7b9d9eb;
+  color: #23202a;
+}
+[data-theme="dark"] .form-status {
+  color: #c9ae8d;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+  .page {
+    padding-bottom: 8px;
+  }
+  .launcher-hero {
+    padding: 17px 0 20px;
+  }
+  .launcher-hero h1 {
+    font-size: 24px;
+  }
+  .launcher-hero .hero-copy > p {
+    font-size: 10px;
+  }
+  .launcher-sun {
+    width: 58px;
+    height: 58px;
+  }
+  .launcher-sun > span:first-child {
+    font-size: 25px;
+  }
+  .launcher-sun > span:last-child {
+    font-size: 27px;
+  }
+  .launcher-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .launcher-grid .tool-card {
+    min-height: 225px;
+    padding: 15px;
+    overflow: hidden;
+  }
+  .launcher-grid .tool-content {
+    width: 100%;
+  }
+  .launcher-grid .app-category {
+    font-size: 8px;
+  }
+  .launcher-grid .tool-content h3 {
+    font-size: 21px;
+    margin-top: 9px;
+    white-space: nowrap;
+  }
+  .launcher-grid .tool-content > p {
+    font-size: 10px;
+    line-height: 1.8;
+    min-height: 43px;
+    max-width: 140px;
+  }
+  .launcher-grid .feature-pills {
+    display: none;
+  }
+  .launcher-grid .feature-pills span {
+    font-size: 7px;
+    padding: 2px 5px;
+  }
+  .launcher-grid .enter-app {
+    width: 93px;
+    margin-top: 58px;
+    font-size: 9px;
+    min-height: 30px;
+    background: var(--panel);
+    z-index: 2;
+    position: relative;
+  }
+  .launcher-grid .card-wheel-art {
+    top: auto;
+    bottom: -48px;
+    right: -51px;
+    transform: rotate(10deg) scale(0.39);
+    opacity: 0.8;
+  }
+  .launcher-grid .card-food-art {
+    top: auto;
+    bottom: -3px;
+    right: -123px;
+    transform: scale(0.46);
+    opacity: 0.8;
+  }
+  .launcher-recent {
+    margin-top: 18px;
+  }
+  .launcher-recent .section-heading {
+    margin-bottom: 9px;
+  }
+  .launcher-recent .section-heading h2 {
+    font-size: 16px;
+  }
+  .launcher-recent .activity {
+    min-width: 191px;
+    padding: 9px 10px;
+  }
+  .settings-modal {
+    width: calc(100% - 24px);
+    max-width: 390px;
+  }
+  .settings-modal .modal-heading {
+    padding: 13px 14px 10px;
+  }
+  .settings-modal .modal-content {
+    padding: 10px 12px 13px;
+  }
+  .settings-row {
+    min-height: 44px;
+  }
+  .settings-row > span {
+    font-size: 11px;
+    gap: 6px;
+  }
+  .theme-choices > button {
+    padding: 5px 7px;
+    font-size: 10px;
+  }
+  .settings-pane .field > input {
+    font-size: 16px;
+  }
+  .settings-pane .button-row > .button {
+    min-height: 33px;
+    font-size: 10px;
+  }
+  .settings-note {
+    font-size: 9px;
+  }
+  .compact-picker .candidate-editor {
+    max-height: 93px;
+  }
+  .compact-picker .picker-scene {
+    height: clamp(232px, 34dvh, 302px);
+  }
+  .compact-picker .playground-bottom {
+    padding: 9px 11px;
+  }
+  .compact-picker .pick-button {
+    min-height: 37px;
+    width: 180px;
+  }
+  .scene-result {
+    min-height: 42px;
+    padding: 7px 11px;
+  }
+  .scene-result .result-value {
+    font-size: 17px;
+  }
+  .scene-result .button {
+    min-height: 27px;
+  }
+  .result-popover {
+    top: 59%;
+    padding: 15px 19px;
+    min-width: 194px;
+  }
+  .result-popover strong {
+    font-size: 23px;
+  }
+  .kitchen-actions {
+    gap: 4px;
+  }
+  .kitchen-actions > .icon-button {
+    width: 25px;
+    height: 25px;
+  }
+  .kitchen-banner-copy > p,
+  .banner-tags {
+    display: none;
+  }
+  .kitchen-banner {
+    min-height: 94px;
+    padding: 16px 18px;
+  }
+  .kitchen-banner-copy h2 {
+    max-width: 265px;
+  }
+  .banner-food {
+    top: -8px;
+    transform: scale(0.48);
+  }
+}
+@media (max-width: 370px) {
+  .launcher-hero h1 {
+    font-size: 21px;
+  }
+  .launcher-sun {
+    width: 50px;
+    height: 50px;
+  }
+  .launcher-grid .tool-card {
+    padding: 12px;
+    min-height: 222px;
+  }
+  .launcher-grid .tool-content h3 {
+    font-size: 18px;
+  }
+  .launcher-grid .tool-content > p {
+    font-size: 9px;
+  }
+  .launcher-grid .enter-app {
+    font-size: 8px;
+    width: 88px;
+  }
+  .launcher-grid .feature-pills span {
+    font-size: 6px;
+    padding: 2px 4px;
+  }
+  .theme-choices > button {
+    padding: 5px;
+    font-size: 9px;
+  }
+  .settings-row > span {
+    font-size: 10px;
+  }
+  .compact-picker .picker-scene {
+    height: 239px;
+  }
+}
+@media (max-width: 600px) and (max-height: 760px) {
+  .compact-picker .candidate-editor {
+    max-height: 62px;
+  }
+  .compact-picker .picker-scene {
+    height: 210px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .result-popover {
+    transition: none;
+  }
+}

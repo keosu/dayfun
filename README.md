@@ -1,0 +1,154 @@
+# 小日子 · Little Day
+
+一组优先使用本地数据的日用小工具。前端为原生 HTML、CSS 和 JavaScript ES Modules；3D 场景使用本地打包的 Three.js，Vite 负责开发预览与多页面构建。界面采用紧凑的 App 布局。
+
+## 启动
+
+需要 Node.js 20.19+ 或 22.12+。
+
+```powershell
+npm install
+npm run dev
+```
+
+开发地址默认是 `http://localhost:5173`，支持热更新。开发模式不注册 Service Worker，方便修改源码。
+
+测试 PWA、安装和离线访问时使用正式构建：
+
+```powershell
+npm run build
+npm run preview
+```
+
+打开 `http://localhost:4173`。三个独立页面分别是：
+
+| 页面 | 路径 | 功能 |
+| --- | --- | --- |
+| 工具首页 | `/` | 应用入口、生活灵感、最近记录 |
+| 随心选 | `/apps/picker/` | 幸运转盘、惊喜扭蛋、像素顶骰子、自定义选项、历史记录 |
+| 今天吃什么 | `/apps/kitchen/` | 公共菜谱、自己的菜、收藏、点菜与份数、用餐记录、烹饪评分 |
+
+## 手机上的 PWA 与全屏
+
+三个页面各有独立的 manifest、应用 ID、启动路径与图标，可以分别安装到桌面。首页安装后也能访问整个工具集合。
+
+- **Android / Chromium**：浏览器菜单或应用设置中的「安装当前应用」。manifest 优先使用 `fullscreen`，不支持时回退至独立窗口；设置里也有网页全屏按钮。
+- **iPhone / iPad**：在 Safari 中选择「分享 → 添加到主屏幕」，再从桌面打开。已配置 `black-translucent` 状态栏与刘海、底部安全区。iOS 不允许网页强制完全隐藏系统状态栏。
+- **手机访问**：PWA、拍照相关能力和 Service Worker 需要 HTTPS，电脑的 `localhost` 是例外。手机通过局域网 IP 访问普通 HTTP 时可以浏览页面，但完整安装与离线功能需要配置 HTTPS。
+
+生产构建自动生成离线资源清单，包含三个页面、全部脚本、样式、图标和菜品图片。第一次联网访问完成缓存后，另外两个工具也能直接离线打开。
+
+## 已实现的工具
+
+随心选提供「吃什么、玩什么、去哪玩、轮到谁、自定义」五类候选清单；候选项放在场景上方，支持 2–16 个选项、逐项修改、批量录入、音效开关和历史删除。随机数使用 Web Crypto，并通过拒绝采样保证选项概率相同。
+
+三个场景使用 Three.js / WebGL 建立真实立体模型，带 PBR 材质、环境反射与阴影；支持拖动查看视角。转盘有加速、减速和指针反馈；扭蛋包含转动把手、内部球体翻滚、出球旋转滚动和打开过程；像素角色顶起骰子后，骰子绕多个轴转动并逐渐停下。答案先在 3D 场景中显露，再高亮对应候选项；停稳约 650 毫秒后才出现透明结果框，约 2.3 秒后自动收起，不阻挡操作。动画完成后停止逐帧绘制，限制像素比与阴影尺寸以适应手机；不支持 WebGL 时回退到 CSS 场景，并尊重系统减少动态效果的偏好。
+
+首页仅保留工具入口与有数据时的最近使用记录，去掉页脚和额外灵感区。页面不显示常驻滚动条，内容较长的内层区域只在滚动时显示透明轨道上的细滑块，约 850 毫秒后自动隐藏。设置分为「偏好、同步、数据」三个短面板；在「偏好」中可切换浅色、暗色或跟随系统。主题保存在本机，在首屏绘制前生效；3D 场景背景与灯光也会随主题更新。
+
+小厨房内置 24 道公共菜谱，覆盖八大菜系、家常菜和地方风味。每道包含图片、材料数量、做法、用时、难度和小窍门；部分复杂经典菜使用明确标注的家庭简化版本。支持按菜系、菜名、食材和地方筛选，并按用时或自己的评分排序。
+
+自建菜谱可拍照或上传图片，填写材料、步骤与自己的小故事，后续可以编辑或删除。图片自动缩放至最长边 1200 像素并压缩成 JPEG，与菜谱一起保存。点菜清单支持份数，用餐后保存成历史；做过的菜可以记录 1–5 星评分、日期和心得。
+
+## 本地数据与备份
+
+数据保存于 IndexedDB 的 `little-day / records`，包含自建菜谱、照片、收藏、烹饪记录、点菜记录、随机结果与候选清单。无需登录，也不依赖同步服务器。
+
+在设置中可以导出 / 导入 JSON 备份、申请浏览器持久存储。备份包含照片及记录，不包含服务器访问令牌。导入按记录 ID 与更新时间合并，不会重复增加同一条记录。清除站点数据、浏览器卸载或设备丢失会影响本地数据，建议定期导出备份。
+
+## 可选同步服务器
+
+附带一个使用 Node.js 标准库的单集合示例同步服务，可以供自己的多个设备共用。它将数据保存成 JSON 文件，支持访问令牌、明确的跨域白名单、输入校验、写入排队和原子文件替换。
+
+```powershell
+$env:SYNC_TOKEN = "your-long-random-access-token"
+$env:SYNC_ORIGINS = "http://localhost:4173,https://your-app.example.com"
+npm run sync-server
+```
+
+然后在应用设置中填写：
+
+- 服务地址：本机演示为 `http://localhost:8787`；远程部署填写你的 HTTPS 地址。
+- 访问令牌：与 `SYNC_TOKEN` 一致。
+- 按需开启「联网后自动同步」，或点击「立即同步」。
+
+未设置 `SYNC_TOKEN` 时，示例服务器会生成并输出临时令牌；重启后令牌会改变。`PORT` 默认 `8787`，`SYNC_DATA_FILE` 默认 `server/data/records.json`。该目录不进入版本控制。示例按令牌保护一个共享集合；需要多用户时应在自己的服务中增加账户及数据隔离。
+
+前端先完成本地保存，自动同步失败时数据仍留在本机。手动同步先拉取、合并，再推送完整记录。不同记录按 ID 合并，同一记录使用更新时间较新的版本；同时发生的删除优先。删除通过 tombstone 同步，避免其他设备将旧数据重新带回。连续本地修改使用递增时间戳，设备间仍建议保持系统时间准确。
+
+兼容其他服务器时，实现以下接口即可：
+
+```text
+GET /api/sync
+PUT /api/sync
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+GET 返回、PUT 请求与响应采用相同结构：
+
+```json
+{
+  "version": 1,
+  "records": [
+    {
+      "id": "favorite:tomato-egg",
+      "type": "favorite",
+      "payload": { "recipeId": "tomato-egg" },
+      "updatedAt": 1795560000000,
+      "deletedAt": null
+    }
+  ]
+}
+```
+
+PUT 应合并记录并返回合并后的全集，而不是覆盖服务端文件。删除记录的 `payload` 为 `null`，`deletedAt` 为删除时间。各类型校验见 `assets/js/records.js`。服务器需处理 `OPTIONS` 并允许应用的来源、`Authorization` 与 `Content-Type`；HTTPS 页面必须连接 HTTPS 同步服务。
+
+## 源码结构
+
+```text
+index.html                    工具首页
+apps/picker/index.html        独立随机工具页面
+apps/kitchen/index.html       独立厨房页面
+assets/styles.css             样式，按页面与手机适配分区
+assets/compact.css            紧凑 App 布局、设置密度与上方候选编辑区
+assets/app.css                简洁应用界面、暗色主题与自动隐藏滚动条
+assets/js/home.js             首页与最近动态
+assets/js/picker.js            随机工具状态与交互
+assets/js/picker-presets.js    主题候选项与场景配置
+assets/js/picker-3d.js         3D 模型、材质、光照、过程动画与资源释放
+assets/js/picker-scenes.js     不支持 WebGL 时的场景、随机数与音效
+assets/js/result-popover.js    模型显露答案后的延迟透明结果框
+assets/js/kitchen.js           菜谱、点菜、评分与记录
+assets/js/recipes.js           公共菜谱数据
+assets/js/photos.js            照片读取与压缩
+assets/js/storage.js           IndexedDB 数据层
+assets/js/records.js           共享数据校验与冲突规则
+assets/js/sync.js              远程接口与自动同步
+assets/js/ui.js                导航、弹窗、设置、提示
+assets/js/settings-view.js     紧凑设置面板与主题选择
+assets/js/theme.js             本地主题偏好、系统主题与场景通知
+assets/js/scrollbars.js        滚动滑块显示与自动隐藏
+public/theme-init.js           首屏绘制前应用主题
+assets/js/pwa.js               安装、全屏与离线状态
+public/                       manifest、Service Worker、图片与图标
+server/sync-server.mjs         可选示例同步服务
+tests/                        桌面 / 手机端浏览器流程测试
+```
+
+修改菜谱直接编辑 `recipes.js`，修改默认候选项编辑 `picker-presets.js`，调整紧凑布局编辑 `compact.css`，调整暗色及最终应用样式编辑 `app.css`。添加工具时增加自己的 HTML / JS、manifest，再补充导航与 `vite.config.js` 的构建入口。构建会自动收集新增静态资源用于离线缓存，包括 Three.js 引擎，不依赖 CDN。
+
+## 检查与部署
+
+```powershell
+npm run format
+npm run build
+npx playwright install chromium
+npm test
+```
+
+测试包含手机 / 桌面布局、三种随机动画与转盘结果对应、完整 3D 动画过程、场景拖动、上方候选位置、内联结果、照片录入、收藏评分、点菜份数、备份、跨设备同步、删除冲突、接口校验和离线跨页访问。
+
+将 `dist/` 部署至 HTTPS 静态站点的根路径，保留 `/apps/` 目录与 `/sw.js`。部署不需要运行 Vite 或安装前端依赖；若启用远程同步，单独部署同步服务并配置 HTTPS 与来源白名单。此版本按域名根路径构建，子目录部署需要同步调整 manifest、Service Worker、链接和 Vite base。
+
+公共菜谱图片来自 Wikimedia Commons，24 张图片的原作者、原始来源和许可记录在 `public/images/credits.json`，应用内也可查看。图片经过缩放与 JPEG 压缩，保留原有图片许可。应用图标与装饰图形由 SVG / CSS 构建，Three.js 的 MIT 许可保留于 `public/licenses/three.txt`。素材已随项目保存，运行与离线访问无需连接图片站点。

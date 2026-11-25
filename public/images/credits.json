@@ -1,0 +1,218 @@
+[
+  {
+    "id": "tomato-egg",
+    "dish": "番茄炒蛋",
+    "file": "/images/tomato-egg.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E7%95%AA%E8%8C%84%E7%82%92%E8%9B%8B2.PNG",
+    "author": "三島堂",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "mapo-tofu",
+    "dish": "麻婆豆腐",
+    "file": "/images/mapo-tofu.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Chen_Mapo_Tofu.jpg",
+    "author": "ZhengZhou",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "kung-pao",
+    "dish": "宫保鸡丁",
+    "file": "/images/kung-pao.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Kung-pao-shanghai.jpg",
+    "author": "Steven G. Johnson",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "id": "sweet-sour",
+    "dish": "咕噜肉",
+    "file": "/images/sweet-sour.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Sweet_and_sour_pork.jpg",
+    "author": "ProjectManhattan",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "id": "white-chicken",
+    "dish": "白切鸡",
+    "file": "/images/white-chicken.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:BeiQieJi-WhiteCutChicken.jpg",
+    "author": "Sjschen",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "id": "dongpo",
+    "dish": "东坡肉",
+    "file": "/images/dongpo.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:BCfood12.JPG",
+    "author": "Archon6812",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "id": "longjing",
+    "dish": "龙井虾仁",
+    "file": "/images/longjing.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Longjing_prawns_in_Hangzhou_Restaurant_2015-07.JPG",
+    "author": "猫猫的日记本",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "pepper-fish",
+    "dish": "剁椒鱼头",
+    "file": "/images/pepper-fish.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Steamed_Fish_Head_with_Diced_Chili_(20150726122046).jpg",
+    "author": "N509FZ",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "braised-pork",
+    "dish": "红烧肉",
+    "file": "/images/braised-pork.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E7%B4%85%E7%87%92%E8%82%89_Braised_pork_in_brown_sauce.jpg",
+    "author": "FotoosVanRobin Photostream",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  {
+    "id": "lion-head",
+    "dish": "狮子头",
+    "file": "/images/lion-head.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E7%8B%AE%E5%AD%90%E6%A5%BC%E7%8B%AE%E5%AD%90%E5%A4%B4.jpg",
+    "author": "三猎",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "fried-rice",
+    "dish": "扬州炒饭",
+    "file": "/images/fried-rice.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Chinese_fried_rice_by_stu_spivack_in_Cleveland,_OH.jpg",
+    "author": "stu_spivack from C &amp; Y Chinese Restaurant in Cleveland's Chinatown, Ohio",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+  },
+  {
+    "id": "sweet-carp",
+    "dish": "糖醋鲤鱼",
+    "file": "/images/sweet-carp.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E7%B3%96%E9%86%8B%E9%B2%A4%E9%B1%BC2024%EF%BC%88%E5%BE%B7%E5%B7%9E%EF%BC%89.jpg",
+    "author": "Suginami",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+  },
+  {
+    "id": "scallion-cucumber",
+    "dish": "葱烧海参",
+    "file": "/images/scallion-cucumber.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Prickly_sea_cucumber_soup.jpg",
+    "author": "Jpatokal",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "buddha-soup",
+    "dish": "佛跳墙",
+    "file": "/images/buddha-soup.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Buddha_soup_boul.jpg",
+    "author": "Photo taken by SunSuke (さんすけ)",
+    "license": "CC BY-SA 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5"
+  },
+  {
+    "id": "oyster-omelette",
+    "dish": "海蛎煎",
+    "file": "/images/oyster-omelette.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Billyfoodoysteromelette.jpg",
+    "author": "Archon6812",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "id": "stinky-fish",
+    "dish": "徽州臭鳜鱼",
+    "file": "/images/stinky-fish.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Fermented_mandarin_fish.jpg",
+    "author": "Zheng Zhou",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "li-tofu",
+    "dish": "李鸿章大杂烩",
+    "file": "/images/li-tofu.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Li_Hongzhang_Hotchpotch.jpg",
+    "author": "Zixiao Xing",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+  },
+  {
+    "id": "peking-duck",
+    "dish": "北京烤鸭",
+    "file": "/images/peking-duck.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Peking_Duck,_2014_(02).jpg",
+    "author": "City Foodsters",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  {
+    "id": "xiaolongbao",
+    "dish": "小笼包",
+    "file": "/images/xiaolongbao.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:A_Xiaolongbao_from_The_Modern_Shanghai.jpg",
+    "author": "Peachyeung316",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "beef-noodles",
+    "dish": "兰州牛肉面",
+    "file": "/images/beef-noodles.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E8%98%AD%E5%B7%9E%E7%89%9B%E8%82%89%E6%8B%89%E9%BA%BA.jpg",
+    "author": "Super koikeyuriko",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+  },
+  {
+    "id": "roujiamo",
+    "dish": "肉夹馍",
+    "file": "/images/roujiamo.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Roujiamo.jpg",
+    "author": "Gary Soup",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  {
+    "id": "hotpot",
+    "dish": "火锅",
+    "file": "/images/hotpot.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hot_Pot.jpg",
+    "author": "Praneeth Thalla",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "dumplings",
+    "dish": "饺子",
+    "file": "/images/dumplings.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E5%8F%B0%E7%81%A3%E5%8D%97%E6%8A%95%E8%8D%89%E5%B1%AF%E6%B0%B4%E9%A4%83Nantou,_Taiwan_Caotun_dumplings.jpg",
+    "author": "Yeepunchmen",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "id": "eggplant",
+    "dish": "鱼香茄子",
+    "file": "/images/eggplant.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Qiezi.jpg",
+    "author": "Popo le Chien",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+  }
+]
