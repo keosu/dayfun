@@ -2,9 +2,9 @@ import { initShell, setActivePage, $, toast } from "./ui.js";
 import "./theme.js";
 
 const routes = {
-  home: { title: "小日子 · 日常有点意思", load: () => import("./home.js") },
-  picker: { title: "随心选 · 小日子", load: () => import("./picker.js") },
-  kitchen: { title: "今天吃什么 · 小日子", load: () => import("./kitchen.js") },
+  home: { title: "趣日常 · 日常有点意思", load: () => import("./home.js") },
+  picker: { title: "随心选 · 趣日常", load: () => import("./picker.js") },
+  kitchen: { title: "今天吃什么 · 趣日常", load: () => import("./kitchen.js") },
 };
 const views = new Map();
 const scrollPositions = new Map();

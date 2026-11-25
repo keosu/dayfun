@@ -16,7 +16,6 @@ test("physical animation progresses before showing an inline matching result", a
     "data-renderer",
     "webgl",
   );
-  // Record the transient popover instead of racing its short display window.
   await page.evaluate(() => {
     const popover = document.querySelector(".result-popover");
     window.popoverShown = null;
@@ -47,13 +46,10 @@ test("physical animation progresses before showing an inline matching result", a
     "data-visual-result",
     "visible",
   );
-  await expect
-    .poll(() => page.evaluate(() => window.popoverShown), { timeout: 8000 })
-    .toEqual({
-      text: await page.locator(".result-value").textContent(),
-      phase: "result",
-    });
-  await expect(page.locator(".result-popover")).toBeHidden({ timeout: 8000 });
+  // The capsule shows its own 3D answer card, so the HTML popover stays out of the way.
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => window.popoverShown)).toBeNull();
+  await expect(page.locator(".result-popover")).toBeHidden();
   await expect(page.locator(".option-row.selected input")).toHaveValue(
     await page.locator(".result-value").textContent(),
   );

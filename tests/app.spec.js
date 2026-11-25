@@ -8,9 +8,17 @@ function watchErrors(page) {
   return errors;
 }
 async function openSettings(page, tab = "preferences") {
-  await page.locator(".header-actions .settings-trigger").click();
+  await page.locator(".settings-trigger:visible").first().click();
   await expect(page.locator(".settings-modal")).toBeVisible();
   await page.locator(`[data-settings-tab="${tab}"]`).click();
+}
+// Phones switch tools with the bottom nav; wide screens go back home and open the tool card.
+async function openTool(page, view) {
+  const tab = page.locator(`.bottom-nav [data-nav="${view}"]`);
+  if (await tab.isVisible()) return tab.click();
+  const back = page.locator(".app-back:visible").first();
+  if (await back.isVisible()) await back.click();
+  if (view !== "home") await page.locator(`.${view}-card`).click();
 }
 async function createRecipe(page, name, photo = false) {
   await page.goto("/#/kitchen");
@@ -88,12 +96,13 @@ test("switching tools stays in one document and keeps each view alive", async ({
     window.spaMarker = true;
     window.pickerCanvas = document.querySelector("#picker-scene canvas");
   });
-  await page.locator('[data-nav="kitchen"]:visible').first().click();
+  await openTool(page, "kitchen");
   await expect(page).toHaveURL(/#\/kitchen$/);
   await expect(page.locator('[data-view="kitchen"]')).toBeVisible();
   await expect(page.locator('[data-view="picker"]')).toBeHidden();
+  await expect(page.locator(".site-header")).toBeHidden();
   await page.locator('[data-tab="favorites"]').click();
-  await page.goBack();
+  await openTool(page, "picker");
   await expect(page.locator('[data-view="picker"]')).toBeVisible();
   await expect(page.locator('[data-topic="玩什么"]')).toHaveClass(/active/);
   expect(
@@ -103,10 +112,13 @@ test("switching tools stays in one document and keeps each view alive", async ({
         window.pickerCanvas === document.querySelector("#picker-scene canvas"),
     ),
   ).toBe(true);
-  await page.locator('[data-nav="kitchen"]:visible').first().click();
+  await openTool(page, "kitchen");
   await expect(page.locator('[data-tab="favorites"]')).toHaveClass(/active/);
-  await page.locator('[data-nav="home"]:visible').first().click();
+  await page.goBack();
+  await expect(page).not.toHaveURL(/#\/kitchen/);
+  await openTool(page, "home");
   await expect(page.locator('[data-view="home"] h1')).toBeVisible();
+  await expect(page.locator(".site-header")).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -161,6 +173,9 @@ test("all random modes use custom options and persist history", async ({
       );
       expect(await page.locator(".result-value").textContent()).toBe(
         ["喝茶", "散步"][selectedIndex],
+      );
+      await expect(page.locator(".result-popover.show strong")).toHaveText(
+        await page.locator(".result-value").textContent(),
       );
     }
     await expect(page.locator("dialog")).toHaveCount(0);

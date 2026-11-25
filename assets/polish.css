@@ -1,0 +1,267 @@
+/* Loaded last: tool pages without a top bar, a bigger 3D stage and readable type. */
+body:not([data-app="home"]) .site-header {
+  display: none;
+}
+body:not([data-app="home"]) .page {
+  padding-top: env(safe-area-inset-top);
+}
+.intro-row .intro-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.intro-row .intro-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.app-back,
+.app-settings {
+  flex-shrink: 0;
+  color: var(--soft-text);
+}
+
+/* Readable sizes for the information people actually look at. */
+.greeting {
+  font-size: 13px;
+}
+.launcher-hero .hero-copy > p {
+  font-size: 14px;
+}
+.app-category {
+  font-size: 12px;
+}
+.tool-content > p {
+  font-size: 14px;
+}
+.tool-content .enter-app {
+  font-size: 13px;
+}
+.intro-row h1,
+.kitchen-intro .intro-row h1 {
+  font-size: 28px;
+}
+.intro-row p,
+.kitchen-intro .intro-row p {
+  font-size: 13px;
+}
+.intro-actions > .button {
+  font-size: 13px;
+}
+.compact-picker .topic-chip {
+  font-size: 13px;
+}
+.compact-picker .options-heading h3,
+.options-heading .text-button,
+.sound-setting {
+  font-size: 13px;
+}
+.compact-picker .option-row input {
+  font-size: 14px;
+}
+.compact-picker .mode-tab {
+  font-size: 14px;
+}
+.scene-heading {
+  font-size: 12px;
+}
+.scene-view-hint {
+  font-size: 11px;
+}
+.compact-picker .pick-button {
+  font-size: 15px;
+}
+#pick-hint {
+  font-size: 12px;
+}
+.scene-result .result-topic {
+  font-size: 12px;
+}
+.scene-result .result-value {
+  font-size: 24px;
+}
+.result-popover span {
+  font-size: 12px;
+}
+.result-popover strong {
+  font-size: 30px;
+}
+.kitchen-tab {
+  font-size: 13px;
+}
+.cuisine-chip {
+  font-size: 12px;
+}
+.recipe-card h3 {
+  font-size: 17px;
+}
+.recipe-description {
+  font-size: 12px;
+}
+.recipe-meta {
+  font-size: 11px;
+}
+.add-to-cart {
+  font-size: 12px;
+}
+.compact-picker .picker-scene {
+  height: clamp(440px, 60vh, 620px);
+}
+.picker-layout.compact-picker,
+.picker-page .page-intro {
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 800px) {
+  .compact-picker .picker-scene {
+    height: clamp(380px, 56vh, 540px);
+  }
+}
+@media (max-width: 600px) {
+  .app-back,
+  .app-settings {
+    display: none;
+  }
+  .page-intro {
+    padding: 14px 0 10px;
+  }
+  .intro-row h1,
+  .kitchen-intro .intro-row h1 {
+    font-size: 26px;
+  }
+  .intro-row p,
+  .kitchen-intro .intro-row p {
+    font-size: 12px;
+  }
+  .picker-page .intro-row p {
+    display: none;
+  }
+
+  /* Home: one card per row; the art sits on the right and never touches text or button. */
+  .launcher-hero h1 {
+    font-size: 26px;
+  }
+  .launcher-hero .hero-copy > p,
+  .greeting {
+    font-size: 13px;
+  }
+  .launcher-hero {
+    padding: 12px 0 14px;
+  }
+  .tools-section .section-heading {
+    margin-bottom: 10px;
+  }
+  .launcher-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .launcher-grid .tool-card {
+    min-height: 0;
+    padding: 16px 20px;
+  }
+  .launcher-grid .tool-content {
+    width: 58%;
+  }
+  .launcher-grid .app-category {
+    display: none;
+  }
+  .launcher-grid .tool-content h3 {
+    font-size: 25px;
+    margin-top: 0;
+  }
+  .launcher-grid .tool-content > p {
+    font-size: 13px;
+    line-height: 1.7;
+    min-height: 0;
+    max-width: none;
+    margin-top: 6px;
+  }
+  .launcher-grid .enter-app {
+    width: auto;
+    margin-top: 10px;
+    font-size: 13px;
+    min-height: 36px;
+    padding: 8px 14px;
+  }
+  .launcher-grid .card-wheel-art {
+    top: 50%;
+    bottom: auto;
+    right: 6px;
+    transform-origin: right center;
+    transform: translateY(-50%) rotate(10deg) scale(0.6);
+    opacity: 1;
+  }
+  .launcher-grid .card-food-art {
+    top: 50%;
+    bottom: auto;
+    right: -6px;
+    transform-origin: right center;
+    transform: translateY(-50%) scale(0.6);
+    opacity: 1;
+  }
+
+  /* Picker: candidates in one scrolling row, so the 3D stage gets the room. */
+  .compact-picker .candidate-editor {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: none;
+    padding-bottom: 2px;
+  }
+  .compact-picker .option-row {
+    flex-shrink: 0;
+    height: 34px;
+    min-height: 34px;
+  }
+  .compact-picker .add-option {
+    order: -1;
+    flex-shrink: 0;
+  }
+  .compact-picker .topic-chip {
+    min-height: 32px;
+    padding: 5px 9px;
+  }
+  .compact-picker .mode-tab {
+    font-size: 13px;
+    min-height: 38px;
+  }
+  .compact-picker .scene-heading {
+    display: none;
+  }
+  .compact-picker .picker-scene {
+    height: clamp(280px, calc(100dvh - 364px), 520px);
+  }
+  .compact-picker .pick-button {
+    min-height: 42px;
+  }
+  .scene-result .result-value {
+    font-size: 22px;
+  }
+  .result-popover strong {
+    font-size: 28px;
+  }
+  .recipe-card h3 {
+    font-size: 16px;
+  }
+  .bottom-nav > a,
+  .bottom-nav > button {
+    font-size: 11px;
+  }
+}
+@media (max-width: 600px) and (max-height: 760px) {
+  .compact-picker .candidate-editor {
+    max-height: none;
+  }
+  .compact-picker .picker-scene {
+    height: clamp(280px, calc(100dvh - 364px), 520px);
+  }
+}
+@media (max-width: 370px) {
+  .compact-picker .picker-scene {
+    height: clamp(260px, calc(100dvh - 370px), 460px);
+  }
+}

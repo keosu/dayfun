@@ -62,9 +62,9 @@ export const links = [
 export function initShell() {
   $("#app").innerHTML = /* HTML */ ` <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="#/" aria-label="小日子首页"
+        <a class="brand" href="#/" aria-label="趣日常首页"
           ><span class="brand-mark"><i></i><i></i><i></i><i></i></span
-          ><span>小日子<small>LITTLE DAY</small></span></a
+          ><span>趣日常<small>DAYFUN</small></span></a
         >
         <nav class="desktop-nav" aria-label="主导航">
           ${links.map((link) => /* HTML */ `<a href="${link.href}" data-nav="${link.id}">${icon(link.icon)}${link.label}</a>`).join("")}
@@ -88,11 +88,10 @@ export function initShell() {
       </button>
     </nav>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>`;
-  $$(".settings-trigger").forEach((button) =>
-    button.addEventListener("click", () =>
-      showSettings().catch((error) => toast(error.message)),
-    ),
-  );
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".settings-trigger"))
+      showSettings().catch((error) => toast(error.message));
+  });
   window.addEventListener("offline", updateBadge);
   window.addEventListener("online", updateBadge);
   window.addEventListener(syncEvent, (event) => {
@@ -114,6 +113,18 @@ export function initShell() {
   startAutoSync();
   updateBadge();
 }
+// Tool pages have no top bar; on wide screens (no bottom nav) these sit beside the title.
+export const appBackButton = () =>
+  /* HTML */ `<a class="icon-button app-back" href="#/" aria-label="返回首页"
+    >${icon("back")}</a
+  >`;
+export const appSettingsButton = () =>
+  /* HTML */ `<button
+    class="icon-button settings-trigger app-settings"
+    aria-label="设置"
+  >
+    ${icon("settings")}
+  </button>`;
 export function setActivePage(page) {
   $("#main").className = `page ${page}-page`;
   document.body.dataset.app = page;
@@ -286,7 +297,7 @@ async function showSettings() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `小日子备份-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `趣日常备份-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast("备份已导出");
@@ -299,7 +310,7 @@ async function showSettings() {
         throw new Error("备份超过 100 MB，请分批导入。");
       const data = JSON.parse(await file.text());
       if (data.app !== "little-day" || data.version !== 1)
-        throw new Error("请选择小日子导出的 JSON 备份。");
+        throw new Error("请选择趣日常导出的 JSON 备份。");
       await mergeRecords(data.records);
       toast("备份已合并，数据不会重复添加");
       dialog.close();

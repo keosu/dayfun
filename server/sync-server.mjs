@@ -139,7 +139,7 @@ const server = http.createServer(async (request, response) => {
   }
 });
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Little Day sync server: http://localhost:${port}`);
+  console.log(`DayFun sync server: http://localhost:${port}`);
   if (!process.env.SYNC_TOKEN)
     console.log(
       `Temporary access token: ${token}\nSet SYNC_TOKEN to keep the same token after restarting.`,

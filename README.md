@@ -1,4 +1,4 @@
-# 小日子 · Little Day
+# 趣日常 · DayFun
 
 一组优先使用本地数据的日用小工具。前端为原生 HTML、CSS 和 JavaScript ES Modules 构成的单页应用（SPA）；3D 场景使用本地打包的 Three.js，Vite 负责开发预览与构建。界面采用紧凑的 App 布局。
 

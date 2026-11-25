@@ -26,6 +26,7 @@ for (const path of [
   "assets/styles.css",
   "assets/compact.css",
   "assets/app.css",
+  "assets/polish.css",
   "index.html",
   "vite.config.js",
   "playwright.config.js",

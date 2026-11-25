@@ -6,6 +6,8 @@ import {
   escapeHTML as esc,
   dateLabel,
   emptyState,
+  appBackButton,
+  appSettingsButton,
 } from "./ui.js";
 import { icon } from "./icons.js";
 import { get, put, list, remove, changeEvent } from "./storage.js";
@@ -50,13 +52,18 @@ async function loadState() {
 const template = () =>
   /* HTML */ ` <div class="page-intro">
       <div class="intro-row">
-        <div>
-          <h1>随心选 <span class="title-doodle">✦</span></h1>
-          <p>小事不纠结，给今天一点小运气。</p>
+        <div class="intro-title">
+          ${appBackButton()}
+          <div>
+            <h1>随心选 <span class="title-doodle">✦</span></h1>
+            <p>小事不纠结，给今天一点小运气。</p>
+          </div>
         </div>
-        <button class="button secondary" id="picker-history">
-          ${icon("history")} 记录
-        </button>
+        <div class="intro-actions">
+          <button class="button secondary" id="picker-history">
+            ${icon("history")} 记录</button
+          >${appSettingsButton()}
+        </div>
       </div>
     </div>
     <div class="picker-layout compact-picker">
@@ -163,7 +170,7 @@ function render() {
             value="${esc(option)}"
             maxlength="30"
             data-index="${index}"
-            style="width:${Math.min(168, Math.max(48, [...option].length * 12))}px"
+            style="width:${Math.min(196, Math.max(56, [...option].length * 15))}px"
           /><button
             class="icon-button remove-option"
             data-index="${index}"
@@ -184,7 +191,6 @@ function render() {
     scene = null;
     sceneKey = key;
     $("#picker-scene").className = `picker-scene scene-${state.mode}`;
-    $(".picker-playground").dataset.scene = state.mode;
     $("#scene-result").hidden = true;
     $(".picker-playground").classList.remove("has-result");
     // Building WebGL and compiling shaders is a long task; let the page paint first.
@@ -352,7 +358,8 @@ async function startPick() {
     $(".result-value").textContent = result;
     $("#scene-result").hidden = false;
     $(".picker-playground").classList.add("has-result");
-    resultPopover.reveal(result);
+    // Capsule and pixel scenes already show a 3D answer card; a popover would cover it.
+    if (mode === "wheel") resultPopover.reveal(result);
     $("#pick-hint").textContent = "答案已经留下，给今天一点新可能";
   } catch (error) {
     toast(error.message);

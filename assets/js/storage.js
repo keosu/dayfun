@@ -107,7 +107,7 @@ export async function remove(id) {
 
 export async function mergeRecords(incoming) {
   if (!validRecords(incoming))
-    throw new Error("数据格式不正确，请使用小日子导出的备份或兼容的同步服务。");
+    throw new Error("数据格式不正确，请使用趣日常导出的备份或兼容的同步服务。");
   await transaction("readwrite", (store) => {
     const request = store.getAll();
     request.onsuccess = () => {

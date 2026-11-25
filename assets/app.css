@@ -984,8 +984,3 @@ html::-webkit-scrollbar {
     animation: none;
   }
 }
-
-/* Capsule and pixel scenes reveal the answer near the floor; keep the popover above it. */
-.picker-playground:not([data-scene="wheel"]) .result-popover {
-  top: 15%;
-}

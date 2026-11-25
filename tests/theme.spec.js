@@ -6,7 +6,8 @@ test("theme preference persists across tools and updates the 3D scene", async ({
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/#/picker");
-  await page.locator(".header-actions .settings-trigger").click();
+  await expect(page.locator(".site-header")).toBeHidden();
+  await page.locator(".settings-trigger:visible").first().click();
   await page.locator('[data-theme-choice="dark"]').click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator("#picker-scene")).toHaveAttribute(
@@ -27,7 +28,7 @@ test("theme preference persists across tools and updates the 3D scene", async ({
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.goto("/#/kitchen");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.locator(".header-actions .settings-trigger").click();
+  await page.locator(".settings-trigger:visible").first().click();
   await page.locator('[data-theme-choice="light"]').click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.locator('[data-theme-choice="system"]').click();

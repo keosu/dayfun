@@ -8,6 +8,8 @@ import {
   safeImage,
   emptyState,
   asset,
+  appBackButton,
+  appSettingsButton,
 } from "./ui.js";
 import { icon } from "./icons.js";
 import { recipes, cuisines } from "./recipes.js";
@@ -33,19 +35,20 @@ let own = [],
 
 const template = () => /* HTML */ `
   <div class="page-intro kitchen-intro">
-    <a class="breadcrumb" href="#/">${icon("back")} 返回工具首页</a>
     <div class="intro-row">
-      <div>
-        <span class="eyebrow orange-text">A LITTLE TASTE OF LIFE</span>
-        <h1>今天吃什么 <span class="title-doodle orange-text">✺</span></h1>
-        <p>好好吃饭，是对平凡生活最温柔的热爱。</p>
+      <div class="intro-title">
+        ${appBackButton()}
+        <div>
+          <h1>今天吃什么 <span class="title-doodle orange-text">✺</span></h1>
+          <p>好好吃饭，是对平凡生活最温柔的热爱。</p>
+        </div>
       </div>
-      <div class="kitchen-actions">
+      <div class="kitchen-actions intro-actions">
         <button class="button primary" id="add-recipe">
           ${icon("plus")} 记录我的菜</button
         ><button class="icon-button" id="photo-credits" aria-label="图片来源">
-          ${icon("info")}
-        </button>
+          ${icon("info")}</button
+        >${appSettingsButton()}
       </div>
     </div>
   </div>

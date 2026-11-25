@@ -134,6 +134,15 @@ function faceAxes(geometry) {
   });
 }
 
+// Keep the character and the dice in one shot, pulling back as they get further apart.
+function frameBoth(x, z, elevation) {
+  return {
+    target: [x * 0.5, 0.95, (z + 0.3) / 2],
+    distance: 4.9 + Math.abs(x) * 0.7,
+    elevation,
+  };
+}
+
 function buildPerson(root) {
   const red = plastic("#bd6575");
   const blue = plastic("#6e84b1");
@@ -179,8 +188,32 @@ function buildPerson(root) {
 export function buildPixel(root, options, { sfx, camera }) {
   const grass = plastic("#a5ba8c");
   const soil = plastic("#d7b696");
-  rounded(root, 3.5, 0.22, 2.3, soil, [0, 0.12, 0], 0.08);
-  rounded(root, 3.56, 0.1, 2.34, grass, [0, 0.265, 0], 0.025);
+  rounded(root, 4.4, 0.22, 2.3, soil, [0, 0.12, 0], 0.08);
+  rounded(root, 4.46, 0.1, 2.34, grass, [0, 0.265, 0], 0.025);
+  // Decor stays at the back of the platform, out of every accepted dice path.
+  const pipe = plastic("#6fae7c", { roughness: 0.35 });
+  addMesh(root, new THREE.CylinderGeometry(0.24, 0.24, 0.62, 28), pipe, [
+    -1.62,
+    GROUND + 0.31,
+    -0.72,
+  ]);
+  addMesh(root, new THREE.CylinderGeometry(0.3, 0.3, 0.18, 28), pipe, [
+    -1.62,
+    GROUND + 0.71,
+    -0.72,
+  ]);
+  const leaf = plastic("#86b26d", { roughness: 0.55, clearcoat: 0.1 });
+  [
+    [1.52, 0.17, -0.78, 0.22],
+    [1.78, 0.14, -0.7, 0.18],
+    [1.66, 0.25, -0.86, 0.2],
+  ].forEach(([x, y, z, r]) =>
+    addMesh(root, new THREE.SphereGeometry(r, 18, 12), leaf, [
+      x,
+      GROUND + y,
+      z,
+    ]),
+  );
   const blockMap = texture(
     (ctx, w) => {
       ctx.fillStyle = "#ebc66b";
@@ -241,36 +274,6 @@ export function buildPixel(root, options, { sfx, camera }) {
     [0, BLOCK_Y, 0],
     0.045,
   );
-  [-0.69, 0.69].forEach((x) => {
-    const brick = rounded(
-      root,
-      0.64,
-      0.64,
-      0.64,
-      plastic("#c89975"),
-      [x, BLOCK_Y, 0],
-      0.025,
-    );
-    for (let i = -1; i <= 1; i++)
-      rounded(
-        brick,
-        0.63,
-        0.018,
-        0.008,
-        plastic("#a47457"),
-        [0, i * 0.19, 0.324],
-        0.003,
-      );
-    rounded(
-      brick,
-      0.018,
-      0.61,
-      0.008,
-      plastic("#a47457"),
-      [0, 0, 0.325],
-      0.003,
-    );
-  });
   const character = buildPerson(root);
   const diceGeometry = new RoundedBoxGeometry(
     HALF * 2,
@@ -334,13 +337,14 @@ export function buildPixel(root, options, { sfx, camera }) {
   function plan() {
     const start = [0, BLOCK_Y + 0.32 + HALF + 0.02, 0.02];
     let result;
-    for (let attempt = 0; attempt < 24; attempt++) {
+    // About 60% of throws pass these checks, so 40 tries effectively never run out.
+    for (let attempt = 0; attempt < 40; attempt++) {
       const side = Math.random() < 0.5 ? -1 : 1;
       result = simulateDice({
         position: start,
         velocity: [
-          side * random(0.55, 0.85),
-          random(2.3, 3),
+          side * random(1.35, 1.7),
+          random(1.7, 2.2),
           random(0.15, 0.4),
         ],
         angular: [0, 1, 2].map(
@@ -354,39 +358,33 @@ export function buildPixel(root, options, { sfx, camera }) {
         half: HALF,
         ground: GROUND,
         gravity: GRAVITY,
-        friction: 0.6,
+        friction: 0.75,
       });
       const frames = result.frames;
       const count = frames.length / 7;
       let clear = result.settled;
-      for (let i = 12; clear && i < count; i += 4) {
+      // Boxes are grown by the dice half-size, so the dice never passes through the block or character.
+      for (let i = 6; clear && i < count; i += 3) {
         const x = frames[i * 7];
         const y = frames[i * 7 + 1];
         const z = frames[i * 7 + 2];
         if (
-          Math.abs(x) < 1.05 &&
-          Math.abs(z) < 0.36 &&
-          y < BLOCK_Y + 0.32 + HALF - 0.02 &&
+          Math.abs(x) < 0.32 + HALF &&
+          Math.abs(z) < 0.32 + HALF &&
+          y < BLOCK_Y + 0.32 + HALF - 0.01 &&
           y > BLOCK_Y - 0.32 - HALF
         )
           clear = false;
         if (
-          Math.abs(x) < 0.42 &&
-          z > 0.02 &&
-          z < 0.6 &&
-          y - HALF < PERSON_Y + 1.15
+          Math.abs(x) < 0.36 + HALF &&
+          Math.abs(z - 0.3) < 0.25 + HALF &&
+          y - HALF < PERSON_Y + 1.55
         )
           clear = false;
       }
-      const x = frames[(count - 1) * 7];
-      const z = frames[(count - 1) * 7 + 2];
-      if (
-        clear &&
-        Math.abs(x) >= 0.5 &&
-        Math.abs(x) <= 1.5 &&
-        Math.abs(z) <= 0.95
-      )
-        break;
+      const x = Math.abs(frames[(count - 1) * 7]);
+      const z = Math.abs(frames[(count - 1) * 7 + 2]);
+      if (clear && x >= 0.95 && x <= 1.9 && z <= 0.95) break;
     }
     return result;
   }
@@ -475,11 +473,7 @@ export function buildPixel(root, options, { sfx, camera }) {
       confetti.clear();
       const previousDice = dice.visible;
       const previousScale = dice.scale.x;
-      const finalFocus = {
-        target: [last.position[0] * 0.75, 0.9, last.position[2] * 0.6 + 0.15],
-        distance: 5,
-        elevation: 0.62,
-      };
+      const finalFocus = frameBoth(last.position[0], last.position[2], 0.6);
       if (reduced) {
         dice.visible = true;
         dice.scale.setScalar(1);
@@ -555,11 +549,7 @@ export function buildPixel(root, options, { sfx, camera }) {
             sfx?.knock(strength * 0.5);
           }
           if (time > landedAt)
-            focus = {
-              target: [dicePosition.x * 0.75, 0.9, dicePosition.z * 0.6 + 0.15],
-              distance: 5.3,
-              elevation: 0.42,
-            };
+            focus = frameBoth(dicePosition.x, dicePosition.z, 0.45);
         }
         pose(
           time,

@@ -47,10 +47,11 @@ function faceCanvas(options) {
       const plain = text || option;
       const parts =
         plain.length > 6 ? [plain.slice(0, 6), plain.slice(6, 12)] : [plain];
-      const maxWidth = Math.min(200, 2 * Math.sin(step / 2) * size * 0.3);
+      const maxWidth = Math.min(250, 2 * Math.sin(step / 2) * size * 0.31);
+      const fontSize = options.length > 10 ? 52 : options.length > 6 ? 70 : 82;
       parts.forEach((part, row) => {
-        fitFont(ctx, part, maxWidth, options.length > 10 ? 40 : 54);
-        ctx.fillText(part, 0, (row - (parts.length - 1) / 2) * 44);
+        const fitted = fitFont(ctx, part, maxWidth, fontSize, 800);
+        ctx.fillText(part, 0, (row - (parts.length - 1) / 2) * fitted * 1.1);
       });
       ctx.restore();
     });
