@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="116" fill="#f7f6f2"/><g transform="rotate(-6 256 256)"><rect x="128" y="128" width="116" height="116" rx="34" fill="#a99acb"/><rect x="268" y="128" width="116" height="116" rx="34" fill="#e9a389"/><rect x="128" y="268" width="116" height="116" rx="34" fill="#a3bfac"/><rect x="268" y="268" width="116" height="116" rx="34" fill="#e4c777"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6e2"/>
+      <stop offset="1" stop-color="#ffdfca"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ffdb73"/>
+      <stop offset="1" stop-color="#f1b23a"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <g transform="translate(256 262) scale(1) translate(-256 -262)">
+    <rect x="243" y="66" width="26" height="46" rx="13" fill="#e9a389" transform="rotate(0 256 262)"/><rect x="243" y="66" width="26" height="46" rx="13" fill="#a99acb" transform="rotate(45 256 262)"/><rect x="243" y="66" width="26" height="46" rx="13" fill="#8fb7d6" transform="rotate(90 256 262)"/><rect x="243" y="66" width="26" height="46" rx="13" fill="#a3bfac" transform="rotate(135 256 262)"/><rect x="243" y="66" width="26" height="46" rx="13" fill="#e9a389" transform="rotate(180 256 262)"/><rect x="243" y="66" width="26" height="46" rx="13" fill="#a99acb" transform="rotate(225 256 262)"/><rect x="243" y="66" width="26" height="46" rx="13" fill="#8fb7d6" transform="rotate(270 256 262)"/><rect x="243" y="66" width="26" height="46" rx="13" fill="#a3bfac" transform="rotate(315 256 262)"/>
+    <circle cx="256" cy="262" r="126" fill="url(#sun)"/>
+    <g fill="none" stroke="#6e4a22" stroke-width="15" stroke-linecap="round">
+      <path d="M190 246q23-28 46 0"/>
+      <path d="M276 246q23-28 46 0"/>
+    </g>
+    <circle cx="184" cy="286" r="18" fill="#f2836f" opacity="0.55"/>
+    <circle cx="328" cy="286" r="18" fill="#f2836f" opacity="0.55"/>
+    <path d="M216 284h80c0 30-18 50-40 50s-40-20-40-50Z" fill="#6e4a22"/>
+    <path d="M232 320c14-12 34-12 48 0-6 9-14 14-24 14s-18-5-24-14Z" fill="#f2836f"/>
+  </g>
+</svg>

@@ -70,8 +70,13 @@ export function initShell() {
   $("#app").innerHTML = /* HTML */ ` <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="#/" aria-label="趣日常首页"
-          ><span class="brand-mark"><i></i><i></i><i></i><i></i></span
-          ><span>趣日常<small>DAYFUN</small></span></a
+          ><img
+            class="brand-logo"
+            src="${asset("/icons/icon.svg")}"
+            alt=""
+            width="36"
+            height="36"
+          /><span>趣日常<small>DAYFUN</small></span></a
         >
         <nav class="desktop-nav" aria-label="主导航">
           ${links.map((link) => /* HTML */ `<a href="${link.href}" data-nav="${link.id}">${icon(link.icon)}${link.label}</a>`).join("")}

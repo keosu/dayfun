@@ -116,6 +116,13 @@ body:not([data-app="home"]) .page {
   margin-right: auto;
 }
 
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  transform: rotate(-6deg);
+}
+
 /* Home card for the countdown timer. */
 .timer-card {
   background: #e3eee1;
