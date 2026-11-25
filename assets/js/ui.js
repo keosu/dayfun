@@ -58,6 +58,13 @@ export const links = [
     href: "#/kitchen",
     icon: "bowl",
   },
+  {
+    id: "timer",
+    label: "搞笑倒计时",
+    short: "倒计时",
+    href: "#/timer",
+    icon: "clock",
+  },
 ];
 export function initShell() {
   $("#app").innerHTML = /* HTML */ ` <header class="site-header">

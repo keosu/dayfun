@@ -27,6 +27,7 @@ for (const path of [
   "assets/compact.css",
   "assets/app.css",
   "assets/polish.css",
+  "assets/timer.css",
   "index.html",
   "vite.config.js",
   "playwright.config.js",
@@ -37,6 +38,7 @@ for (const path of [
   "tests/sync.spec.js",
   "tests/animation.spec.js",
   "tests/theme.spec.js",
+  "tests/timer.spec.js",
   "scripts/tune-physics.mjs",
   ".github/workflows/deploy.yml",
 ]) {

@@ -234,5 +234,79 @@ export function createSfx(isEnabled) {
         ),
       );
     },
+    // Cartoon alarm bell; higher levels ring longer and louder.
+    alarm(level = 0) {
+      play((ac, at) => {
+        const strikes = 10 + level * 4;
+        const peak = Math.min(0.1, 0.045 + level * 0.012);
+        for (let i = 0; i < strikes; i++)
+          tone(ac, at + i * 0.075, {
+            type: "square",
+            from: i % 2 ? 1180 : 1480,
+            peak,
+            attack: 0.003,
+            decay: 0.06,
+          });
+      });
+    },
+    boing() {
+      play((ac, at) => {
+        const oscillator = ac.createOscillator();
+        const wobble = ac.createOscillator();
+        const depth = ac.createGain();
+        wobble.frequency.value = 18;
+        depth.gain.setValueAtTime(60, at);
+        depth.gain.exponentialRampToValueAtTime(4, at + 0.6);
+        wobble.connect(depth);
+        depth.connect(oscillator.frequency);
+        oscillator.frequency.setValueAtTime(140, at);
+        oscillator.frequency.exponentialRampToValueAtTime(420, at + 0.12);
+        oscillator.frequency.exponentialRampToValueAtTime(260, at + 0.6);
+        oscillator.connect(envelope(ac, at, 0.14, 0.01, 0.6));
+        oscillator.start(at);
+        wobble.start(at);
+        oscillator.stop(at + 0.7);
+        wobble.stop(at + 0.7);
+      });
+    },
+    honk() {
+      play((ac, at) =>
+        [0, 0.26].forEach((offset, index) => {
+          const oscillator = ac.createOscillator();
+          const filter = ac.createBiquadFilter();
+          oscillator.type = "sawtooth";
+          oscillator.frequency.setValueAtTime(index ? 262 : 330, at + offset);
+          filter.type = "lowpass";
+          filter.frequency.value = 1300;
+          oscillator.connect(filter);
+          filter.connect(envelope(ac, at + offset, 0.09, 0.02, 0.2));
+          oscillator.start(at + offset);
+          oscillator.stop(at + offset + 0.26);
+        }),
+      );
+    },
+    slide(up = true) {
+      play((ac, at) =>
+        tone(ac, at, {
+          from: up ? 380 : 1500,
+          to: up ? 1500 : 300,
+          peak: 0.08,
+          attack: 0.04,
+          decay: 0.55,
+        }),
+      );
+    },
+    rimshot() {
+      play((ac, at) => {
+        tone(ac, at, { from: 180, to: 90, peak: 0.16, decay: 0.12 });
+        tone(ac, at + 0.16, { from: 160, to: 80, peak: 0.16, decay: 0.12 });
+        burst(ac, at + 0.36, {
+          type: "highpass",
+          frequency: 6500,
+          peak: 0.1,
+          decay: 0.45,
+        });
+      });
+    },
   };
 }

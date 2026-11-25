@@ -58,6 +58,7 @@ test("home links and all pages fit phone and desktop widths", async ({
   for (const [path, view] of [
     ["/", "home"],
     ["/#/picker", "picker"],
+    ["/#/timer", "timer"],
     ["/#/kitchen", "kitchen"],
   ]) {
     await page.goto(path);
@@ -346,6 +347,7 @@ test("PWA manifests and all tools operate offline after installation cache", asy
   expect(manifest.shortcuts.map((item) => item.url)).toEqual([
     "./#/picker",
     "./#/kitchen",
+    "./#/timer",
   ]);
   for (const icon of [
     ...manifest.icons,

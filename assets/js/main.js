@@ -5,6 +5,7 @@ const routes = {
   home: { title: "趣日常 · 日常有点意思", load: () => import("./home.js") },
   picker: { title: "随心选 · 趣日常", load: () => import("./picker.js") },
   kitchen: { title: "今天吃什么 · 趣日常", load: () => import("./kitchen.js") },
+  timer: { title: "搞笑倒计时 · 趣日常", load: () => import("./timer.js") },
 };
 const views = new Map();
 const scrollPositions = new Map();
@@ -93,6 +94,23 @@ function prefetch() {
   );
 }
 
+// A countdown started before a reload keeps running, and can still ring, while another page is open.
+function restoreTimer() {
+  try {
+    if (
+      /"status":"(running|paused|ringing)"/.test(
+        localStorage.getItem("little-day:timer") || "",
+      )
+    )
+      view("timer").catch(() => {});
+  } catch {
+    /* Storage unavailable: nothing to restore. */
+  }
+}
+
 initShell();
 window.addEventListener("hashchange", route);
-route().then(prefetch);
+route().then(() => {
+  restoreTimer();
+  prefetch();
+});

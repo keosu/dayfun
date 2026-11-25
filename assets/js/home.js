@@ -59,6 +59,21 @@ export function mount(root) {
               class="hero-food"
             /></div
         ></a>
+        <a class="tool-card timer-card" href="#/timer"
+          ><div class="tool-content">
+            <span class="app-category">${icon("clock")} 时间到了喊你</span>
+            <h3>搞笑倒计时</h3>
+            <p>泡面、刷牙、写作业，<br />不关掉它就越喊越急。</p>
+            <div class="feature-pills">
+              <span>语音</span><span>搞怪</span><span>越催越急</span>
+            </div>
+            <span class="enter-app">开始计时 ${icon("arrow")}</span>
+          </div>
+          <div class="card-timer-art" aria-hidden="true">
+            <span class="timer-art-clock">⏰</span
+            ><span class="timer-art-word">叮!</span>
+          </div></a
+        >
       </div>
     </section>
     <section class="launcher-recent" id="recent-section" hidden>

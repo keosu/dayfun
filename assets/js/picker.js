@@ -39,6 +39,8 @@ async function loadState() {
         deletedAt: null,
       },
     ]);
+  if (validState && stored.sets.轮到谁.join() === "小明,小红,小林,小陈")
+    stored.sets.轮到谁 = [...presets.轮到谁];
   return validState
     ? stored
     : {

@@ -116,12 +116,137 @@ body:not([data-app="home"]) .page {
   margin-right: auto;
 }
 
+/* Home card for the countdown timer. */
+.timer-card {
+  background: #e3eee1;
+}
+.timer-card .app-category,
+.timer-card .enter-app {
+  color: #6c9475;
+}
+.timer-card .tool-content > p {
+  color: #7a937f;
+}
+.timer-card .feature-pills span {
+  border-color: #8fb39638;
+  color: #7c9e83;
+}
+.card-timer-art {
+  position: absolute;
+  right: 34px;
+  top: 50%;
+  z-index: 1;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.timer-art-clock {
+  display: block;
+  font-size: 112px;
+  line-height: 1;
+  transform-origin: 50% 85%;
+  animation: timer-art-ring 2.4s ease-in-out infinite;
+}
+.timer-art-word {
+  position: absolute;
+  top: -8px;
+  right: -22px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #e0796a;
+  transform: rotate(14deg);
+  animation: timer-art-word 2.4s ease-in-out infinite;
+}
+@keyframes timer-art-ring {
+  0%,
+  62%,
+  100% {
+    transform: rotate(0);
+  }
+  66% {
+    transform: rotate(-13deg);
+  }
+  71% {
+    transform: rotate(12deg);
+  }
+  76% {
+    transform: rotate(-9deg);
+  }
+  81% {
+    transform: rotate(7deg);
+  }
+  86% {
+    transform: rotate(-3deg);
+  }
+}
+@keyframes timer-art-word {
+  0%,
+  60%,
+  100% {
+    opacity: 0;
+    transform: rotate(14deg) scale(0.6);
+  }
+  68%,
+  90% {
+    opacity: 1;
+    transform: rotate(14deg) scale(1);
+  }
+}
+[data-theme="dark"] .timer-card {
+  background: #24332b;
+}
+[data-theme="dark"] .timer-card .app-category,
+[data-theme="dark"] .timer-card .enter-app {
+  color: #9fc4a7;
+}
+[data-theme="dark"] .timer-card .feature-pills span {
+  color: #9fc4a7;
+  border-color: #9fc4a730;
+}
+
+/* A running countdown shows a dot on its navigation link from any page. */
+[data-nav="timer"] {
+  position: relative;
+}
+[data-nav="timer"].is-live::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: calc(50% - 16px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  animation: live-dot 1.2s ease-in-out infinite;
+}
+.desktop-nav [data-nav="timer"].is-live::after {
+  top: 4px;
+  right: 4px;
+}
+@keyframes live-dot {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timer-art-clock,
+  .timer-art-word,
+  [data-nav="timer"].is-live::after {
+    animation: none;
+  }
+  .timer-art-word {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 800px) {
   .compact-picker .picker-scene {
     height: clamp(380px, 56vh, 540px);
   }
 }
 @media (max-width: 600px) {
+  html {
+    scroll-padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
   .app-back,
   .app-settings {
     display: none;
@@ -180,28 +305,37 @@ body:not([data-app="home"]) .page {
     max-width: none;
     margin-top: 6px;
   }
+  /* The whole card is the link; a title arrow replaces the button so every tool fits on one screen. */
   .launcher-grid .enter-app {
-    width: auto;
-    margin-top: 10px;
-    font-size: 13px;
-    min-height: 36px;
-    padding: 8px 14px;
+    display: none;
+  }
+  .launcher-grid .tool-content h3::after {
+    content: "›";
+    margin-left: 8px;
+    font-weight: 500;
+    color: var(--soft-text);
   }
   .launcher-grid .card-wheel-art {
     top: 50%;
     bottom: auto;
-    right: 6px;
+    right: 10px;
     transform-origin: right center;
-    transform: translateY(-50%) rotate(10deg) scale(0.6);
+    transform: translateY(-50%) rotate(10deg) scale(0.48);
     opacity: 1;
   }
   .launcher-grid .card-food-art {
     top: 50%;
     bottom: auto;
-    right: -6px;
+    right: -2px;
     transform-origin: right center;
-    transform: translateY(-50%) scale(0.6);
+    transform: translateY(-50%) scale(0.5);
     opacity: 1;
+  }
+  .launcher-grid .card-timer-art {
+    right: 34px;
+  }
+  .launcher-grid .timer-art-clock {
+    font-size: 66px;
   }
 
   /* Picker: candidates in one scrolling row, so the 3D stage gets the room. */
