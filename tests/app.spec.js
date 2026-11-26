@@ -13,14 +13,17 @@ async function openSettings(page, tab = "preferences") {
   await page.locator(`[data-settings-tab="${tab}"]`).click();
 }
 // There is no bottom navigation: a tool opens from the home tile and the top-left icon returns home.
+// Waits for the route to settle (body[data-app] flips first, then the view shows) before the next step.
 async function openTool(page, view) {
-  if (
-    view !== "home" &&
-    !(await page.locator('[data-view="home"]').isVisible())
-  )
+  const current = await page.locator("body").getAttribute("data-app");
+  if (current === view) return;
+  if (current !== "home") {
     await page.locator(".app-back:visible").first().click();
-  if (view === "home") return page.locator(".app-back:visible").first().click();
-  await page.locator(`.hm-${view}`).click();
+    await expect(page.locator("body")).toHaveAttribute("data-app", "home");
+  }
+  if (view !== "home") await page.locator(`.hm-${view}`).click();
+  await expect(page.locator("body")).toHaveAttribute("data-app", view);
+  await expect(page.locator(`[data-view="${view}"]`)).toBeVisible();
 }
 async function chooseTopic(page, name) {
   await page.locator("#topic-btn").click();

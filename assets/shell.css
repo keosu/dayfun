@@ -210,10 +210,13 @@ body:not([data-app="home"]) #app > .site-header {
 }
 
 /* Bottom sheets on phones, centered cards on larger screens. */
+/* The sheet itself scrolls (heading sticks to the top). No flex sizing: older iOS Safari
+   collapses a flex child with a 0 basis inside an auto-height sheet down to the heading. */
 dialog.modal {
   position: fixed;
   width: min(560px, calc(100% - 24px));
   max-width: none;
+  max-height: 88vh;
   max-height: min(88dvh, 780px);
   margin: auto;
   padding: 0;
@@ -222,11 +225,13 @@ dialog.modal {
   background: var(--panel);
   color: var(--ink);
   box-shadow: 0 24px 80px #00000038;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 dialog.modal[open] {
-  display: flex;
-  flex-direction: column;
+  display: block;
   animation: pop-in 0.2s ease-out;
 }
 dialog.modal::backdrop {
@@ -234,11 +239,16 @@ dialog.modal::backdrop {
   backdrop-filter: blur(4px);
 }
 dialog.modal .modal-heading {
-  position: static;
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 18px 18px 8px 22px;
   border: 0;
-  background: none;
+  background: var(--panel);
 }
 dialog.modal .modal-heading h2 {
   margin: 0;
@@ -250,10 +260,6 @@ dialog.modal .modal-heading > .icon-button {
   background: var(--subtle);
 }
 dialog.modal .modal-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   padding: 6px 22px calc(20px + env(safe-area-inset-bottom));
 }
 @media (max-width: 640px) {
@@ -261,6 +267,7 @@ dialog.modal .modal-content {
     width: 100%;
     margin: auto 0 0;
     border-radius: 26px 26px 0 0;
+    max-height: 90vh;
     max-height: 90dvh;
   }
   dialog.modal[open] {

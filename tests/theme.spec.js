@@ -45,11 +45,19 @@ test("the page never scrolls and settings open as a sheet inside the screen", as
   ).toBe(true);
   await expect(page.locator("footer")).toHaveCount(0);
   await page.locator(".settings-trigger:visible").first().click();
-  const box = await page.locator(".settings-modal").boundingBox();
   const viewport = page.viewportSize();
-  expect(box.y).toBeGreaterThanOrEqual(0);
-  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
-  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+  // Wait for the sheet's entry animation to finish before measuring where it sits.
+  await expect
+    .poll(async () => {
+      const box = await page.locator(".settings-modal").boundingBox();
+      return (
+        box &&
+        box.y >= 0 &&
+        box.y + box.height <= viewport.height + 1 &&
+        box.x + box.width <= viewport.width + 1
+      );
+    })
+    .toBe(true);
   await page.locator(".modal-close").click();
   await page.goto("/#/kitchen");
   await page.locator('[data-open="tomato-egg"]').first().click();
