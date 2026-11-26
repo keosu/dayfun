@@ -174,6 +174,10 @@ tests/                        桌面 / 手机端浏览器流程测试
 
 修改菜谱直接编辑 `recipes.js`，修改默认候选项编辑 `picker-presets.js`，调整整体外壳、顶栏、弹层、首页、随心选和厨房样式编辑最后加载的 `shell.css`。添加工具时新建一个导出 `mount(element)` 的模块（可返回 `show(params)` / `hide()`），在 `main.js` 的路由表和 `home.js` 的首页卡片中各加一项即可（顶栏用 `ui.js` 的 `toolbar()`）。构建会自动收集新增静态资源用于离线缓存，包括 Three.js 引擎，不依赖 CDN。调整物理参数后可运行 `node scripts/tune-physics.mjs` 检查转盘时长与骰子落点。
 
+## 技能与协作约定
+
+[`skills/`](skills/README.md) 里是通用格式（`SKILL.md`）的设计偏好、协作习惯和 PWA 经验，以及本项目的专用指南；[`AGENTS.md`](AGENTS.md) 指向这些文件。
+
 ## 检查与部署
 
 ```powershell
