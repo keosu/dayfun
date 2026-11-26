@@ -6,6 +6,10 @@ const routes = {
   picker: { title: "随心选 · 趣日常", load: () => import("./picker.js") },
   kitchen: { title: "今天吃什么 · 趣日常", load: () => import("./kitchen.js") },
   timer: { title: "搞笑倒计时 · 趣日常", load: () => import("./timer.js") },
+  calendar: {
+    title: "日程提醒 · 趣日常",
+    load: () => import("./schedule.js"),
+  },
 };
 const views = new Map();
 const scrollPositions = new Map();
@@ -112,5 +116,7 @@ initShell();
 window.addEventListener("hashchange", route);
 route().then(() => {
   restoreTimer();
+  // Calendar reminders keep watching the clock whichever tool is open.
+  import("./reminders.js").then((module) => module.start()).catch(() => {});
   prefetch();
 });

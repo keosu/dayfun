@@ -8,8 +8,7 @@ import {
   safeImage,
   emptyState,
   asset,
-  appBackButton,
-  appSettingsButton,
+  toolbar,
 } from "./ui.js";
 import { icon } from "./icons.js";
 import { recipes, cuisines } from "./recipes.js";
@@ -17,85 +16,50 @@ import { list, get, put, remove, changeEvent } from "./storage.js";
 import { compressPhoto } from "./photos.js";
 
 const tabs = [
-  { id: "public", text: "公共菜谱", icon: "book" },
-  { id: "own", text: "我的厨房", icon: "camera" },
-  { id: "favorites", text: "我的收藏", icon: "heart" },
-  { id: "orders", text: "点菜清单", icon: "bag" },
-  { id: "records", text: "美味记录", icon: "history" },
+  { id: "public", text: "菜谱" },
+  { id: "own", text: "我的菜" },
+  { id: "favorites", text: "收藏" },
+  { id: "orders", text: "点菜" },
+  { id: "records", text: "记录" },
 ];
 let tab = "public";
 let cuisine = "全部";
 let search = "";
-let sort = "recommended";
 let own = [],
   favorites = new Set(),
   reviews = [],
   orders = [],
   cart = { items: [] };
 
-const template = () => /* HTML */ `
-  <div class="page-intro kitchen-intro">
-    <div class="intro-row">
-      <div class="intro-title">
-        ${appBackButton()}
-        <div>
-          <h1>今天吃什么 <span class="title-doodle orange-text">✺</span></h1>
-          <p>好好吃饭，是对平凡生活最温柔的热爱。</p>
-        </div>
-      </div>
-      <div class="kitchen-actions intro-actions">
-        <button class="button primary" id="add-recipe">
-          ${icon("plus")} 记录我的菜</button
-        ><button class="icon-button" id="photo-credits" aria-label="图片来源">
-          ${icon("info")}</button
-        >${appSettingsButton()}
-      </div>
+const template = () =>
+  /* HTML */ `<div class="kt">
+    ${toolbar(
+      "🍳 今天吃什么",
+      /* HTML */ `<button class="tb-pill primary" id="add-recipe">
+        ${icon("plus")} 添加
+      </button>`,
+    )}
+    <nav class="kt-tabs" aria-label="厨房分类">
+      ${tabs.map((item) => /* HTML */ `<button data-tab="${item.id}" class="kt-tab">${item.text}${item.id === "orders" ? '<span id="cart-count" class="count-badge">0</span>' : ""}</button>`).join("")}
+    </nav>
+    <div class="kt-filters" id="catalog-toolbar">
+      <label class="kt-search"
+        >${icon("search")}<input
+          type="search"
+          id="recipe-search"
+          placeholder="搜菜名、食材…"
+          aria-label="搜索菜谱"
+      /></label>
+      <select id="cuisine-select" aria-label="按菜系筛选">
+        ${cuisines.map((item) => /* HTML */ `<option value="${item}">${item === "全部" ? "全部菜系" : item}</option>`).join("")}
+      </select>
     </div>
-  </div>
-  <section class="kitchen-banner">
-    <div class="kitchen-banner-copy">
-      <span>${icon("sun")} 人间烟火，最是治愈</span>
-      <h2>把日子，过成喜欢的味道<span>。</span></h2>
-      <p>从各地经典到你的拿手好菜，每一道都有故事。</p>
-      <div class="banner-tags">
-        <span>八大菜系</span><i>·</i><span>家常好味</span><i>·</i
-        ><span>独家记忆</span>
-      </div>
-    </div>
-    <div class="banner-food" aria-hidden="true">
-      <div class="banner-food-circle"></div>
-      <img src="${asset("/images/kung-pao.jpg")}" alt="" /><span
-        class="banner-sticker"
-        >用心做<br />慢慢吃 ♡</span
-      ><span class="banner-leaf">❧</span>
-    </div>
-  </section>
-  <nav class="kitchen-tabs" aria-label="厨房分类">
-    ${tabs.map((item) => /* HTML */ `<button data-tab="${item.id}" class="kitchen-tab">${icon(item.icon)} ${item.text}${item.id === "orders" ? '<span id="cart-count" class="count-badge">0</span>' : ""}</button>`).join("")}
-  </nav>
-  <div id="catalog-toolbar">
-    <div class="catalog-topline">
-      <h2 id="catalog-title">发现好味道 <span id="recipe-total"></span></h2>
-      <div class="catalog-tools">
-        <label class="search-field"
-          >${icon("search")}<input
-            type="search"
-            id="recipe-search"
-            placeholder="搜菜名、食材或地方…"
-            aria-label="搜索菜谱" /></label
-        ><select id="recipe-sort" aria-label="菜谱排序">
-          <option value="recommended">推荐排序</option>
-          <option value="quick">用时最短</option>
-          <option value="rating">我的评分</option>
-        </select>
-      </div>
-    </div>
-    <div class="cuisine-filters" aria-label="按菜系筛选">
-      ${cuisines.map((item) => /* HTML */ `<button data-cuisine="${item}" class="cuisine-chip">${item}</button>`).join("")}
-    </div>
-  </div>
-  <section id="kitchen-content" aria-live="polite"></section>
-`;
+    <section
+      class="kt-scroll"
+      id="kitchen-content"
+      aria-live="polite"
+    ></section>
+  </div>`;
 
 async function loadData() {
   const results = await Promise.all([
@@ -136,71 +100,60 @@ function rating(id) {
 function card(recipe) {
   const score = rating(recipe.id);
   const inCart = cart.items.some((item) => item.recipeId === recipe.id);
-  return /* HTML */ `<article class="recipe-card">
-    <div class="recipe-image-wrap">
-      <button
-        class="recipe-image-button"
-        data-open="${esc(recipe.id)}"
-        aria-label="查看${esc(recipe.name)}的材料和做法"
-      >
-        <img
-          src="${safeImage(recipe.image)}"
-          alt="${esc(recipe.name)}"
-          loading="lazy"
-        /></button
-      ><span class="recipe-cuisine">${esc(recipe.cuisine)}</span
-      ><button
-        class="favorite-button ${favorites.has(recipe.id) ? "is-favorite" : ""}"
-        data-favorite="${esc(recipe.id)}"
-        aria-label="${favorites.has(recipe.id) ? "取消收藏" : "收藏"}${esc(recipe.name)}"
-        aria-pressed="${favorites.has(recipe.id)}"
-      >
-        ${icon("heart")}</button
-      >${recipe.source === "own" ? '<span class="own-photo-tag">我的拿手菜</span>' : ""}
-    </div>
-    <div class="recipe-card-body">
-      <button class="recipe-title-button" data-open="${esc(recipe.id)}">
-        <h3>${esc(recipe.name)}</h3>
-        ${icon("chevron")}
+  const meta = [
+    recipe.cuisine,
+    recipe.minutes ? `${recipe.minutes} 分钟` : "",
+  ].filter(Boolean);
+  return /* HTML */ `<article class="kt-card">
+    <button
+      class="kt-photo"
+      data-open="${esc(recipe.id)}"
+      aria-label="查看${esc(recipe.name)}"
+    >
+      <img
+        src="${safeImage(recipe.image)}"
+        alt="${esc(recipe.name)}"
+        loading="lazy"
+      />
+    </button>
+    <button
+      class="kt-fav ${favorites.has(recipe.id) ? "on" : ""}"
+      data-favorite="${esc(recipe.id)}"
+      aria-label="${favorites.has(recipe.id) ? "取消收藏" : "收藏"}${esc(recipe.name)}"
+      aria-pressed="${favorites.has(recipe.id)}"
+    >
+      ${icon("heart")}
+    </button>
+    <div class="kt-info">
+      <button class="kt-name" data-open="${esc(recipe.id)}">
+        ${esc(recipe.name)}
       </button>
-      <p class="recipe-description">
-        ${esc(recipe.description || "亲手做的，最合心意。")}
-      </p>
-      <div class="recipe-meta">
-        <span>${icon("clock")} ${esc(recipe.minutes)} 分钟</span
-        ><span
-          class="difficulty-dot ${recipe.difficulty === "简单" ? "easy" : ""}"
-          >${esc(recipe.difficulty)}</span
-        ><span class="recipe-region">${esc(recipe.region || "我的厨房")}</span>
-      </div>
-      <div class="recipe-card-bottom">
-        <span class="recipe-rating"
-          >${icon("star")}
-          ${score.average ? `${score.average} <small>· 做过 ${score.count} 次</small>` : "<small>等你来尝试</small>"}</span
-        ><button
-          class="add-to-cart ${inCart ? "added" : ""}"
-          data-cart="${esc(recipe.id)}"
-          aria-label="${inCart ? "从清单移除" : "点菜"}${esc(recipe.name)}"
-        >
-          ${icon(inCart ? "check" : "plus")}${inCart ? "已点" : "点菜"}
-        </button>
-      </div>
+      <span class="kt-meta"
+        >${esc(meta.join(" · "))}${score.average ? /* HTML */ ` <em class="recipe-rating">★ ${score.average}</em>` : ""}</span
+      >
     </div>
+    <button
+      class="kt-add ${inCart ? "added" : ""}"
+      data-cart="${esc(recipe.id)}"
+      aria-label="${inCart ? "从清单移除" : "点菜"}${esc(recipe.name)}"
+    >
+      ${icon(inCart ? "check" : "plus")}${inCart ? "已点" : "点菜"}
+    </button>
   </article>`;
 }
 function render() {
-  $$(".kitchen-tab").forEach((button) => {
+  $$(".kt-tab").forEach((button) => {
     button.classList.toggle("active", button.dataset.tab === tab);
     button.setAttribute(
       "aria-current",
       button.dataset.tab === tab ? "page" : "false",
     );
   });
-  $("#cart-count").textContent = cart.items.reduce(
-    (sum, item) => sum + item.quantity,
-    0,
-  );
+  const count = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  $("#cart-count").textContent = count;
+  $("#cart-count").hidden = !count;
   $("#catalog-toolbar").hidden = ["orders", "records"].includes(tab);
+  $("#cuisine-select").value = cuisine;
   if (tab === "orders") {
     renderOrders();
     return;
@@ -219,24 +172,17 @@ function render() {
     filtered = filtered.filter((recipe) => recipe.cuisine === cuisine);
   if (search)
     filtered = filtered.filter((recipe) =>
-      `${recipe.name} ${recipe.cuisine} ${recipe.region} ${recipe.ingredients.join(" ")}`
+      `${recipe.name} ${recipe.cuisine} ${recipe.region} ${(recipe.ingredients || []).join(" ")}`
         .toLowerCase()
         .includes(search.toLowerCase()),
     );
-  if (sort === "quick")
-    filtered = [...filtered].sort((a, b) => a.minutes - b.minutes);
-  if (sort === "rating")
-    filtered = [...filtered].sort(
-      (a, b) => Number(rating(b.id).average) - Number(rating(a.id).average),
-    );
-  $("#catalog-title").innerHTML =
-    `${tab === "own" ? "属于你的好味道" : tab === "favorites" ? "把喜欢留在这里" : "发现好味道"} <span id="recipe-total">${filtered.length} 道菜</span>`;
-  $$(".cuisine-chip").forEach((button) => {
-    button.classList.toggle("active", button.dataset.cuisine === cuisine);
-    button.setAttribute("aria-pressed", button.dataset.cuisine === cuisine);
-  });
   $("#kitchen-content").innerHTML = filtered.length
-    ? /* HTML */ `<div class="recipe-grid">${filtered.map(card).join("")}</div>`
+    ? /* HTML */ `<div class="kt-grid">${filtered.map(card).join("")}</div>
+        ${
+          tab === "public"
+            ? '<button class="text-button kt-credits" id="photo-credits">图片来源</button>'
+            : ""
+        }`
     : emptyState({
         symbol: tab === "own" ? "📷" : tab === "favorites" ? "💛" : "🥕",
         title:
@@ -249,7 +195,7 @@ function render() {
           search || cuisine !== "全部"
             ? "换个关键词或菜系，再试试看。"
             : tab === "own"
-              ? "拍下刚做好的菜，记下材料和做法，下次再做一遍。"
+              ? "拍张照、写个名字就能记下一道菜。"
               : "点击菜谱上的爱心，下一次想吃就能找到。",
         action:
           tab === "own"
@@ -272,29 +218,23 @@ function selectTab(id) {
     id === "public" ? "#/kitchen" : `#/kitchen?tab=${id}`,
   );
   render();
+  $("#kitchen-content").scrollTop = 0;
 }
 function bindEvents() {
-  $$(".kitchen-tab").forEach(
+  $$(".kt-tab").forEach(
     (button) => (button.onclick = () => selectTab(button.dataset.tab)),
   );
-  $$(".cuisine-chip").forEach(
-    (button) =>
-      (button.onclick = () => {
-        cuisine = button.dataset.cuisine;
-        render();
-      }),
-  );
+  $("#cuisine-select").onchange = (event) => {
+    cuisine = event.target.value;
+    render();
+  };
   $("#recipe-search").oninput = (event) => {
     search = event.target.value.trim();
     render();
   };
-  $("#recipe-sort").onchange = (event) => {
-    sort = event.target.value;
-    render();
-  };
   $("#add-recipe").onclick = () => recipeForm();
-  $("#photo-credits").onclick = showCredits;
   $("#kitchen-content").addEventListener("click", async (event) => {
+    if (event.target.closest("#photo-credits")) return showCredits();
     const open = event.target.closest("[data-open]");
     if (open) {
       showRecipe(open.dataset.open);
@@ -347,24 +287,27 @@ function showRecipe(id) {
   const recipe = findRecipe(id);
   if (!recipe) return;
   const score = rating(id);
+  const ingredients = recipe.ingredients || [];
+  const steps = recipe.steps || [];
   const dialog = modal({
     title: recipe.name,
-    eyebrow: `${recipe.cuisine} · ${recipe.region || "我的厨房"}`,
-    className: "recipe-detail-modal",
+    eyebrow:
+      [recipe.cuisine, recipe.region].filter(Boolean).join(" · ") || "我的厨房",
+    className: "recipe-detail-modal sheet",
     content: /* HTML */ `<img
         class="detail-photo"
         src="${safeImage(recipe.image)}"
         alt="${esc(recipe.name)}"
       />
       <div class="detail-meta">
-        <span>${icon("clock")} ${esc(recipe.minutes)} 分钟</span
-        ><span>${icon("leaf")} ${esc(recipe.difficulty)}</span
-        ><span
+        ${recipe.minutes ? /* HTML */ `<span>${icon("clock")} ${esc(recipe.minutes)} 分钟</span>` : ""}
+        ${recipe.difficulty ? /* HTML */ `<span>${icon("leaf")} ${esc(recipe.difficulty)}</span>` : ""}
+        <span
           >${icon("star")}
           ${score.average ? `${score.average} · ${score.count} 次记录` : "等你来评分"}</span
         >
       </div>
-      <p class="detail-description">${esc(recipe.description)}</p>
+      ${recipe.description ? /* HTML */ `<p class="detail-description">${esc(recipe.description)}</p>` : ""}
       <div class="detail-actions">
         <button class="button secondary" id="detail-favorite">
           ${icon("heart")} ${favorites.has(id) ? "已收藏" : "收藏这道菜"}</button
@@ -373,29 +316,41 @@ function showRecipe(id) {
           ${cart.items.some((item) => item.recipeId === id) ? "已加入清单" : "加入点菜清单"}
         </button>
       </div>
-      <section class="detail-section">
-        <h3>
-          准备食材
-          <span>${recipe.source === "own" ? "按你的记录" : "约 2 人份"}</span>
-        </h3>
-        <div class="ingredient-list">
-          ${recipe.ingredients.map((item) => /* HTML */ `<label><input type="checkbox" /><span>${esc(item)}</span></label>`).join("")}
-        </div>
-      </section>
-      <section class="detail-section">
-        <h3>一步步，做出好味道</h3>
-        <ol class="cooking-steps">
-          ${recipe.steps
-            .map(
-              (step, i) =>
-                /* HTML */ `<li>
-                  <span>${String(i + 1).padStart(2, "0")}</span>
-                  <p>${esc(step)}</p>
-                </li>`,
-            )
-            .join("")}
-        </ol>
-      </section>
+      ${
+        ingredients.length
+          ? /* HTML */ `<section class="detail-section">
+              <h3>
+                准备食材
+                <span
+                  >${recipe.source === "own" ? "按你的记录" : "约 2 人份"}</span
+                >
+              </h3>
+              <div class="ingredient-list">
+                ${ingredients.map((item) => /* HTML */ `<label><input type="checkbox" /><span>${esc(item)}</span></label>`).join("")}
+              </div>
+            </section>`
+          : ""
+      }
+      ${
+        steps.length
+          ? /* HTML */ `<section class="detail-section">
+              <h3>一步步，做出好味道</h3>
+              <ol class="cooking-steps">
+                ${steps
+                  .map(
+                    (step, i) =>
+                      /* HTML */ `<li>
+                        <span>${String(i + 1).padStart(2, "0")}</span>
+                        <p>${esc(step)}</p>
+                      </li>`,
+                  )
+                  .join("")}
+              </ol>
+            </section>`
+          : recipe.source === "own" && !ingredients.length
+            ? '<p class="muted center">还没写材料和做法，点下面的「编辑菜谱」随时补充。</p>'
+            : ""
+      }
       ${
         recipe.tip
           ? /* HTML */ `<div class="recipe-tip">
@@ -449,10 +404,19 @@ function showRecipe(id) {
 function recipeForm(existing) {
   let image = existing?.image || "";
   let processingPhoto = false;
+  const hasExtra = Boolean(
+    existing &&
+    (existing.description ||
+      existing.tip ||
+      existing.minutes ||
+      existing.difficulty ||
+      existing.ingredients?.length ||
+      existing.steps?.length ||
+      (existing.region && existing.region !== "我的厨房")),
+  );
   const dialog = modal({
-    title: existing ? "完善这道拿手菜" : "记住一道，自己的好味道",
-    eyebrow: "MY LITTLE KITCHEN",
-    className: "recipe-form-modal",
+    title: existing ? "编辑这道菜" : "添加一道菜",
+    className: "recipe-form-modal sheet",
     content: /* HTML */ `<form id="recipe-form">
       <label class="photo-upload ${image ? "has-photo" : ""}"
         ><img
@@ -461,8 +425,8 @@ function recipeForm(existing) {
           alt="菜品照片预览"
           ${image ? "" : "hidden"} /><span id="photo-placeholder"
           >${icon("camera")}<strong
-            >${image ? "点击更换照片" : "给你的拿手菜拍张照"}</strong
-          ><small>点击拍照或选择图片 · 自动压缩保存</small></span
+            >${image ? "点击更换照片" : "拍张照片"}</strong
+          ><small>拍照或选择图片，自动压缩</small></span
         ><input
           name="photo"
           type="file"
@@ -478,74 +442,73 @@ function recipeForm(existing) {
           placeholder="例如：妈妈的红烧排骨"
           value="${esc(existing?.name || "")}"
       /></label>
-      <div class="form-two-columns">
+      <details class="kt-more" ${hasExtra ? "open" : ""}>
+        <summary>更多信息（选填）</summary>
+        <div class="form-two-columns">
+          <label class="field"
+            >菜系<select name="cuisine">
+              ${["家常菜", ...cuisines.slice(2), "我的独创"].map((item) => /* HTML */ `<option ${item === existing?.cuisine ? "selected" : ""}>${item}</option>`).join("")}
+            </select></label
+          ><label class="field"
+            >用时（分钟）<input
+              name="minutes"
+              type="number"
+              min="0"
+              max="1440"
+              placeholder="不填"
+              value="${existing?.minutes || ""}"
+          /></label>
+        </div>
+        <div class="form-two-columns">
+          <label class="field"
+            >难度<select name="difficulty">
+              <option value="">不填</option>
+              ${["简单", "适中", "进阶"].map((item) => /* HTML */ `<option ${item === existing?.difficulty ? "selected" : ""}>${item}</option>`).join("")}
+            </select></label
+          ><label class="field"
+            >地方 / 记忆<input
+              name="region"
+              maxlength="40"
+              placeholder="例如：家乡的味道"
+              value="${esc(existing?.region === "我的厨房" ? "" : existing?.region || "")}"
+          /></label>
+        </div>
         <label class="field"
-          >菜系<select name="cuisine">
-            ${["家常菜", ...cuisines.slice(2), "我的独创"].map((item) => /* HTML */ `<option ${item === existing?.cuisine ? "selected" : ""}>${item}</option>`).join("")}
-          </select></label
-        ><label class="field"
-          >用时（分钟）<input
-            name="minutes"
-            type="number"
-            min="1"
-            max="1440"
-            required
-            value="${existing?.minutes || 30}"
-        /></label>
-      </div>
-      <div class="form-two-columns">
-        <label class="field"
-          >难度<select name="difficulty">
-            ${["简单", "适中", "进阶"].map((item) => /* HTML */ `<option ${item === existing?.difficulty ? "selected" : ""}>${item}</option>`).join("")}
-          </select></label
-        ><label class="field"
-          >地方 / 记忆<input
-            name="region"
-            maxlength="40"
-            placeholder="例如：家乡的味道"
-            value="${esc(existing?.region || "")}"
-        /></label>
-      </div>
-      <label class="field"
-        >这道菜的小故事<textarea
-          name="description"
-          rows="2"
-          maxlength="300"
-          placeholder="为什么喜欢它，或是谁教你做的…"
-        >
+          >这道菜的小故事<textarea
+            name="description"
+            rows="2"
+            maxlength="300"
+            placeholder="为什么喜欢它，或是谁教你做的…"
+          >
 ${esc(existing?.description || "")}</textarea></label
-      ><label class="field"
-        >材料 <span class="required">*</span
-        ><textarea
-          name="ingredients"
-          rows="4"
-          required
-          maxlength="6000"
-          placeholder="每行一项，例如：&#10;排骨 500 克&#10;冰糖 20 克"
-        >
-${esc(existing?.ingredients.join("\n") || "")}</textarea></label
-      ><label class="field"
-        >做法 <span class="required">*</span
-        ><textarea
-          name="steps"
-          rows="5"
-          required
-          maxlength="12000"
-          placeholder="每行一个步骤，从第一步开始记录…"
-        >
-${esc(existing?.steps.join("\n") || "")}</textarea></label
-      ><label class="field"
-        >你的独家小窍门<input
-          name="tip"
-          maxlength="300"
-          placeholder="下次做的时候，记得…"
-          value="${esc(existing?.tip || "")}"
-      /></label>
+        ><label class="field"
+          >材料<textarea
+            name="ingredients"
+            rows="3"
+            maxlength="6000"
+            placeholder="每行一项，例如：&#10;排骨 500 克&#10;冰糖 20 克"
+          >
+${esc((existing?.ingredients || []).join("\n"))}</textarea></label
+        ><label class="field"
+          >做法<textarea
+            name="steps"
+            rows="3"
+            maxlength="12000"
+            placeholder="每行一个步骤"
+          >
+${esc((existing?.steps || []).join("\n"))}</textarea></label
+        ><label class="field"
+          >小窍门<input
+            name="tip"
+            maxlength="300"
+            placeholder="下次做的时候，记得…"
+            value="${esc(existing?.tip || "")}"
+        /></label>
+      </details>
       <p id="recipe-form-status" class="form-status" role="status"></p>
       <button type="submit" class="button primary full-width">
-        ${icon("check")} ${existing ? "保存修改" : "保存到我的厨房"}
+        ${icon("check")} ${existing ? "保存修改" : "保存"}
       </button>
-      <p class="fine-print center">${icon("shield")} 照片和菜谱先保存在本机</p>
     </form>`,
   });
   const form = $("#recipe-form", dialog);
@@ -575,19 +538,16 @@ ${esc(existing?.steps.join("\n") || "")}</textarea></label
       return;
     }
     const data = new FormData(form);
-    const ingredients = data
-      .get("ingredients")
-      .split("\n")
-      .map((item) => item.trim())
-      .filter(Boolean);
-    const steps = data
-      .get("steps")
-      .split("\n")
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const lines = (key) =>
+      String(data.get(key) || "")
+        .split("\n")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    const ingredients = lines("ingredients");
+    const steps = lines("steps");
     const name = data.get("name").trim();
-    if (!name || !ingredients.length || !steps.length) {
-      $("#recipe-form-status", dialog).textContent = "请填写菜名、材料和做法。";
+    if (!name) {
+      $("#recipe-form-status", dialog).textContent = "给这道菜起个名字吧。";
       return;
     }
     if (
@@ -611,8 +571,8 @@ ${esc(existing?.steps.join("\n") || "")}</textarea></label
           name,
           cuisine: data.get("cuisine"),
           region: data.get("region").trim() || "我的厨房",
-          minutes: Number(data.get("minutes")),
-          difficulty: data.get("difficulty"),
+          minutes: Number(data.get("minutes")) || 0,
+          difficulty: data.get("difficulty") || "",
           emoji: "🍳",
           description: data.get("description").trim(),
           ingredients,

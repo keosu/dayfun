@@ -2,7 +2,7 @@
   "id": "./",
   "name": "趣日常",
   "short_name": "趣日常",
-  "description": "让日常小事多一点乐趣的口袋工具箱：随心选、今天吃什么、搞笑倒计时",
+  "description": "让日常小事多一点乐趣的口袋工具箱：随心选、今天吃什么、搞笑倒计时、日程提醒",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",
@@ -45,6 +45,11 @@
       "name": "搞笑倒计时",
       "url": "./#/timer",
       "icons": [{ "src": "icons/timer-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "日程提醒",
+      "url": "./#/calendar",
+      "icons": [{ "src": "icons/calendar-192.png", "sizes": "192x192" }]
     }
   ]
 }

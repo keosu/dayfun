@@ -14,6 +14,28 @@ async function recordSpeech(page) {
         window.spoken.push(utterance.text);
   });
 }
+// Start from known settings (silent, no permission prompts) without overwriting a running timer on reload.
+async function preset(page, overrides = {}) {
+  await page.addInitScript((extra) => {
+    if (localStorage.getItem("little-day:timer")) return;
+    const seconds = extra.seconds ?? 180;
+    localStorage.setItem(
+      "little-day:timer",
+      JSON.stringify({
+        task: "noodle",
+        seconds,
+        total: seconds,
+        remaining: seconds,
+        endAt: 0,
+        status: "idle",
+        sound: false,
+        voice: true,
+        notify: false,
+        ...extra,
+      }),
+    );
+  }, overrides);
+}
 const spoken = (page) => page.evaluate(() => window.spoken);
 
 test("countdown calls you back, nags harder until dismissed", async ({
@@ -22,10 +44,16 @@ test("countdown calls you back, nags harder until dismissed", async ({
   const errors = watchErrors(page);
   await page.clock.install();
   await recordSpeech(page);
+  await preset(page);
   await page.goto("/#/timer");
   const stage = page.locator(".timer-stage");
-  await page.locator("#timer-sound").uncheck();
+  // The main screen only shows the countdown; settings live behind the top button.
+  await expect(page.locator("#tm-open")).toContainText("泡面");
+  await expect(page.locator(".tm-tiles")).toHaveCount(0);
+  await page.locator("#tm-open").click();
   await page.locator('[data-task="teeth"]').click();
+  await page.locator("[data-done]").click();
+  await expect(page.locator("dialog")).toHaveCount(0);
   await expect(page.locator("#timer-digits")).toHaveText("02:00");
   await page.locator('[data-action="start"]').click();
   await expect(stage).toHaveAttribute("data-status", "running");
@@ -35,9 +63,7 @@ test("countdown calls you back, nags harder until dismissed", async ({
   await expect(page.locator("#timer-digits")).toHaveText("00:59");
   await page.evaluate(() => (location.hash = "#/"));
   await expect(page.locator('[data-view="home"]')).toBeVisible();
-  await expect(page.locator('[data-nav="timer"]').first()).toHaveClass(
-    /is-live/,
-  );
+  await expect(page.locator(".hm-timer .hm-live")).toBeVisible();
 
   await page.clock.runFor(60_000);
   await expect(page).toHaveURL(/#\/timer$/);
@@ -63,9 +89,8 @@ test("countdown calls you back, nags harder until dismissed", async ({
   const after = await spoken(page);
   expect(after).toHaveLength(before + 1);
   expect(after.at(-1)).toMatch(/理我|收到|关掉我/);
-  await expect(page.locator('[data-nav="timer"]').first()).not.toHaveClass(
-    /is-live/,
-  );
+  await page.evaluate(() => (location.hash = "#/"));
+  await expect(page.locator(".hm-timer .hm-live")).toBeHidden();
   expect(errors).toEqual([]);
 });
 
@@ -74,11 +99,8 @@ test("snooze gives one more minute and a running timer survives reload", async (
 }) => {
   const errors = watchErrors(page);
   await recordSpeech(page);
+  await preset(page, { seconds: 2 });
   await page.goto("/#/timer");
-  await page.locator("#timer-sound").uncheck();
-  await page.locator("#timer-sec").fill("2");
-  await page.locator("#timer-min").fill("0");
-  await page.locator("#timer-min").blur();
   await expect(page.locator("#timer-digits")).toHaveText("00:02");
   await page.locator('[data-action="start"]').click();
   await expect(page.locator(".timer-stage")).toHaveAttribute(
@@ -106,13 +128,44 @@ test("snooze gives one more minute and a running timer survives reload", async (
   expect(errors).toEqual([]);
 });
 
-test("whose-turn picker defaults to the family", async ({ page }) => {
+test("timer sheet sets the time with steppers and presets and offers system notifications", async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await preset(page);
+  await page.goto("/#/timer");
+  await page.locator("#tm-open").click();
+  const sheet = page.locator(".tm-sheet");
+  await expect(sheet).toBeVisible();
+  // Everything fits in the sheet without scrolling.
+  expect(
+    await sheet
+      .locator(".modal-content")
+      .evaluate((element) => element.scrollHeight <= element.clientHeight + 1),
+  ).toBe(true);
+  await sheet.locator('[data-set="600"]').click();
+  await expect(page.locator("#timer-digits")).toHaveText("10:00");
+  await sheet.locator('[data-step="60"]').first().click();
+  await expect(page.locator("#timer-digits")).toHaveText("11:00");
+  await sheet.locator('[data-step="-10"]').click();
+  await expect(page.locator("#timer-digits")).toHaveText("10:50");
+  await expect(sheet.locator('[data-switch="notify"]')).toHaveCount(1);
+  await sheet.locator("[data-done]").click();
+  await expect(page.locator("#tm-open")).toContainText("10:50");
+  expect(errors).toEqual([]);
+});
+
+test("the whole-family turn picker has the default options", async ({
+  page,
+}) => {
   await page.goto("/#/picker");
+  await page.locator("#topic-btn").click();
   await page.locator('[data-topic="轮到谁"]').click();
-  await expect(page.locator(".option-row input")).toHaveCount(3);
+  await page.locator("#edit-options").click();
+  await expect(page.locator("#ps-list .ps-option input")).toHaveCount(3);
   expect(
     await page
-      .locator(".option-row input")
+      .locator("#ps-list .ps-option input")
       .evaluateAll((inputs) => inputs.map((input) => input.value)),
   ).toEqual(["宝宝 👶", "爸爸 👨", "妈妈 👩"]);
 });

@@ -1,6 +1,7 @@
-import { $, $$, toast, appBackButton, appSettingsButton } from "./ui.js";
+import { $, $$, modal, toolbar } from "./ui.js";
 import { icon } from "./icons.js";
 import { createSfx } from "./picker/audio.js";
+import * as system from "./notify.js";
 import "../timer.css";
 
 const storageKey = "little-day:timer";
@@ -179,6 +180,7 @@ function load() {
     seconds: 180,
     sound: true,
     voice: true,
+    notify: true,
     status: "idle",
     total: 180,
     endAt: 0,
@@ -273,18 +275,10 @@ function render() {
   const stage = $(".timer-stage", root);
   const busy = state.status !== "idle";
   stage.dataset.status = state.status;
-  $$("[data-task]", root).forEach((button) => {
-    button.classList.toggle("active", button.dataset.task === state.task);
-    button.setAttribute("aria-pressed", button.dataset.task === state.task);
-  });
-  $$(
-    ".timer-controls button, .timer-controls input:not([type=checkbox])",
-    root,
-  ).forEach((element) => (element.disabled = busy));
-  $("#timer-min", root).value = Math.floor(state.seconds / 60);
-  $("#timer-sec", root).value = state.seconds % 60;
-  $("#timer-sound", root).checked = state.sound;
-  $("#timer-voice", root).checked = state.voice;
+  const open = $("#tm-open", root);
+  open.disabled = busy;
+  open.innerHTML = `${task().emoji} ${task().name} · ${clock(state.seconds)} ${icon("down")}`;
+  $("#timer-digits", root).toggleAttribute("data-tap", !busy);
   $("#timer-task-name", root).textContent = `${task().emoji} ${task().name}`;
   const actions = {
     idle: /* HTML */ `<button
@@ -318,9 +312,6 @@ function render() {
     setFace("😑");
     bubble("暂停中……我先眯一会儿");
   }
-  $$('[data-nav="timer"]').forEach((link) =>
-    link.classList.toggle("is-live", busy),
-  );
   draw();
 }
 function draw() {
@@ -375,6 +366,8 @@ function run() {
 
 function start(seconds = state.seconds, line) {
   sfx.unlock();
+  // Must be asked inside the tap that starts the timer, or browsers ignore it.
+  if (state.notify && system.permission() === "default") system.ask();
   hush();
   state.total = seconds;
   state.endAt = Date.now() + seconds * 1000;
@@ -397,7 +390,6 @@ function ring() {
   nagCount = 0;
   render();
   if (!location.hash.startsWith("#/timer")) location.hash = "#/timer";
-  else scrollTo({ top: 0, behavior: "smooth" });
   nag();
   run();
 }
@@ -424,6 +416,13 @@ function nag() {
     Array.from({ length: 2 + level }, () => [180, 90]).flat(),
   );
   later(() => speak(line, level), 1100);
+  // In the foreground the page already shouts; a system notification is for when it is out of sight.
+  if (state.notify && document.visibilityState !== "visible")
+    system.notify(`${task().emoji} ${task().name}：时间到！`, {
+      body: line,
+      tag: "timer",
+      url: "#/timer",
+    });
   nagCount += 1;
   later(nag, level >= 5 ? 12000 : 9000);
 }
@@ -473,46 +472,11 @@ function bindEvents() {
       stop(pick(dismissLines), "😎");
     }
     if (action === "snooze") start(60, pick(snoozeLines));
-    const chip = event.target.closest("[data-task]");
-    if (chip && state.status === "idle") {
-      state.task = chip.dataset.task;
-      state.seconds = task().seconds;
-      save();
-      render();
-      setFace(task().emoji);
-      bubble(`${task().name}，${spoken(state.seconds)}，准备好就点开始！`);
-    }
-    const add = event.target.closest("[data-add]");
-    if (add && state.status === "idle") {
-      const value = Number(add.dataset.add);
-      state.seconds = value
-        ? Math.min(maxSeconds, state.seconds + value)
-        : task().seconds;
-      save();
-      render();
-    }
-  });
-  root.addEventListener("change", (event) => {
-    if (event.target.id === "timer-sound") state.sound = event.target.checked;
-    if (event.target.id === "timer-voice") {
-      state.voice = event.target.checked;
-      if (!state.voice) window.speechSynthesis?.cancel();
-    }
-    if (["timer-min", "timer-sec"].includes(event.target.id)) {
-      const minutes = Math.max(
-        0,
-        Math.floor(Number($("#timer-min", root).value) || 0),
-      );
-      const seconds = Math.max(
-        0,
-        Math.floor(Number($("#timer-sec", root).value) || 0),
-      );
-      const total = minutes * 60 + seconds;
-      if (total < 1) toast("至少要 1 秒哦");
-      state.seconds = Math.min(maxSeconds, Math.max(1, total));
-      render();
-    }
-    save();
+    if (
+      state.status === "idle" &&
+      event.target.closest("#tm-open, #timer-digits")
+    )
+      openSettings();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible") return;
@@ -527,109 +491,175 @@ function bindEvents() {
   }
 }
 
-const template = () =>
-  /* HTML */ `<div class="page-intro">
-      <div class="intro-row">
-        <div class="intro-title">
-          ${appBackButton()}
-          <div>
-            <h1>搞笑倒计时 <span class="title-doodle">⏰</span></h1>
-            <p>时间一到，它会想尽办法喊你。</p>
-          </div>
-        </div>
-        <div class="intro-actions">${appSettingsButton()}</div>
+const minuteSteps = [1, 3, 5, 10, 15, 30, 60];
+
+// The one place where the countdown is configured: task, length, and how it should nag.
+function openSettings() {
+  const dialog = modal({
+    title: "计时设置",
+    className: "sheet tm-sheet",
+    content: /* HTML */ `<div class="tm-tiles">
+        ${tasks
+          .map(
+            (item) =>
+              /* HTML */ `<button class="tm-tile" data-task="${item.id}">
+                <span>${item.emoji}</span>${item.name}
+              </button>`,
+          )
+          .join("")}
       </div>
-    </div>
-    <div class="timer-layout">
-      <section class="timer-stage" data-status="idle" data-level="0">
-        <div
-          class="timer-bubble"
-          id="timer-bubble"
-          role="status"
-          aria-live="polite"
-        ></div>
-        <div class="timer-clock">
-          <span class="ring-word ring-word-left" aria-hidden="true">叮</span>
-          <span class="ring-word ring-word-right" aria-hidden="true">铃</span>
-          <svg class="timer-ring" viewBox="0 0 120 120" aria-hidden="true">
-            <circle class="ring-track" cx="60" cy="60" r="54" />
-            <circle
-              class="ring-progress"
-              cx="60"
-              cy="60"
-              r="54"
-              pathLength="100"
-            />
-          </svg>
-          <div class="timer-center">
-            <div class="timer-face" id="timer-face">🥱</div>
-            <div class="timer-digits" id="timer-digits">03:00</div>
-            <div class="timer-task-name" id="timer-task-name"></div>
-            <div class="timer-over" id="timer-over"></div>
-          </div>
+      <div class="tm-time">
+        ${[
+          ["min", 60, "分"],
+          ["sec", 10, "秒"],
+        ]
+          .map(
+            ([unit, step, label]) =>
+              /* HTML */ `<div class="tm-step">
+                <button data-step="-${step}" aria-label="减少${label}">
+                  ${icon("minus")}</button
+                ><b id="sh-${unit}">0</b><small>${label}</small
+                ><button data-step="${step}" aria-label="增加${label}">
+                  ${icon("plus")}
+                </button>
+              </div>`,
+          )
+          .join("")}
+      </div>
+      <div class="tm-chips">
+        ${minuteSteps.map((minutes) => /* HTML */ `<button data-set="${minutes * 60}">${minutes} 分</button>`).join("")}
+      </div>
+      <div class="tm-switches">
+        ${[
+          ["voice", "搞笑语音"],
+          ["sound", "音效"],
+          ["notify", "系统通知"],
+        ]
+          .map(
+            ([key, label]) =>
+              /* HTML */ `<label class="switch-label"
+                ><span>${label}</span
+                ><input type="checkbox" data-switch="${key}" /><span
+                  class="switch"
+                ></span
+              ></label>`,
+          )
+          .join("")}
+      </div>
+      <p class="tm-hint" id="sh-hint"></p>
+      <button class="button primary full-width" data-done>完成</button>`,
+  });
+  const set = (seconds) => {
+    state.seconds = Math.min(maxSeconds, Math.max(1, Math.round(seconds)));
+    save();
+    sync();
+    render();
+  };
+  function sync() {
+    $$("[data-task]", dialog).forEach((button) =>
+      button.classList.toggle("active", button.dataset.task === state.task),
+    );
+    $("#sh-min", dialog).textContent = Math.floor(state.seconds / 60);
+    $("#sh-sec", dialog).textContent = pad(state.seconds % 60);
+    $$("[data-set]", dialog).forEach((button) =>
+      button.classList.toggle(
+        "active",
+        Number(button.dataset.set) === state.seconds,
+      ),
+    );
+    $$("[data-switch]", dialog).forEach(
+      (input) => (input.checked = state[input.dataset.switch]),
+    );
+    $("#sh-hint", dialog).textContent = state.notify
+      ? system.permission() === "granted"
+        ? "时间到时，如果页面不在前台，会发系统通知。"
+        : system.statusText()
+      : "";
+  }
+  sync();
+  dialog.addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target) return;
+    if (target.dataset.task) {
+      state.task = target.dataset.task;
+      state.seconds = task().seconds;
+      save();
+      sync();
+      render();
+      setFace(task().emoji);
+      bubble(`${task().name}，${spoken(state.seconds)}，准备好就点开始！`);
+    }
+    if (target.dataset.set) set(Number(target.dataset.set));
+    if ("done" in target.dataset) dialog.close();
+  });
+  // Steppers repeat while held, so a long countdown does not take dozens of taps.
+  let hold = 0;
+  const release = () => {
+    clearTimeout(hold);
+    clearInterval(hold);
+  };
+  dialog.addEventListener("pointerdown", (event) => {
+    const button = event.target.closest("[data-step]");
+    if (!button) return;
+    const step = Number(button.dataset.step);
+    set(state.seconds + step);
+    hold = setTimeout(() => {
+      hold = setInterval(() => set(state.seconds + step), 110);
+    }, 420);
+  });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((name) =>
+    dialog.addEventListener(name, release),
+  );
+  dialog.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-step]");
+    if (button && event.detail === 0)
+      set(state.seconds + Number(button.dataset.step));
+  });
+  dialog.addEventListener("change", async (event) => {
+    const key = event.target.dataset.switch;
+    if (!key) return;
+    state[key] = event.target.checked;
+    if (key === "voice" && !state.voice) window.speechSynthesis?.cancel();
+    if (key === "notify" && state.notify) await system.ask();
+    save();
+    sync();
+  });
+  dialog.addEventListener("close", release, { once: true });
+}
+
+const template = () =>
+  /* HTML */ `<div class="tm">
+    ${toolbar("⏰ 倒计时", /* HTML */ `<button class="tb-pill" id="tm-open"></button>`)}
+    <section class="timer-stage" data-status="idle" data-level="0">
+      <div
+        class="timer-bubble"
+        id="timer-bubble"
+        role="status"
+        aria-live="polite"
+      ></div>
+      <div class="timer-clock">
+        <span class="ring-word ring-word-left" aria-hidden="true">叮</span>
+        <span class="ring-word ring-word-right" aria-hidden="true">铃</span>
+        <svg class="timer-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="54" />
+          <circle
+            class="ring-progress"
+            cx="60"
+            cy="60"
+            r="54"
+            pathLength="100"
+          />
+        </svg>
+        <div class="timer-center">
+          <div class="timer-face" id="timer-face">🥱</div>
+          <div class="timer-digits" id="timer-digits">03:00</div>
+          <div class="timer-task-name" id="timer-task-name"></div>
+          <div class="timer-over" id="timer-over"></div>
         </div>
-        <div class="timer-actions" id="timer-actions"></div>
-      </section>
-      <section class="timer-controls panel" aria-label="倒计时设置">
-        <h3>计时做什么</h3>
-        <div class="timer-tasks">
-          ${tasks
-            .map(
-              (item) =>
-                /* HTML */ `<button class="topic-chip" data-task="${item.id}">
-                  ${item.emoji} ${item.name}
-                </button>`,
-            )
-            .join("")}
-        </div>
-        <h3>多长时间</h3>
-        <div class="timer-set">
-          <label
-            ><input
-              id="timer-min"
-              type="number"
-              inputmode="numeric"
-              min="0"
-              max="180"
-              aria-label="分钟"
-            /><span>分</span></label
-          >
-          <label
-            ><input
-              id="timer-sec"
-              type="number"
-              inputmode="numeric"
-              min="0"
-              max="59"
-              aria-label="秒"
-            /><span>秒</span></label
-          >
-        </div>
-        <div class="timer-quick">
-          <button class="topic-chip" data-add="10">+10秒</button>
-          <button class="topic-chip" data-add="30">+30秒</button>
-          <button class="topic-chip" data-add="60">+1分</button>
-          <button class="topic-chip" data-add="300">+5分</button>
-          <button class="topic-chip" data-add="0">默认</button>
-        </div>
-        <div class="timer-switches">
-          <label class="switch-label"
-            ><span>搞笑语音</span
-            ><input type="checkbox" id="timer-voice" /><span
-              class="switch"
-            ></span
-          ></label>
-          <label class="switch-label"
-            ><span>音效</span><input type="checkbox" id="timer-sound" /><span
-              class="switch"
-            ></span
-          ></label>
-        </div>
-        <p class="fine-print">
-          时间到了不关掉，它会换着花样越喊越急。手机锁屏后浏览器可能暂停计时，计时时屏幕会尽量保持常亮。
-        </p>
-      </section>
-    </div>`;
+      </div>
+      <div class="timer-actions" id="timer-actions"></div>
+    </section>
+  </div>`;
 
 export function mount(element) {
   root = element;

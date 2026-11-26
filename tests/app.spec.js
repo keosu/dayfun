@@ -12,22 +12,33 @@ async function openSettings(page, tab = "preferences") {
   await expect(page.locator(".settings-modal")).toBeVisible();
   await page.locator(`[data-settings-tab="${tab}"]`).click();
 }
-// Phones switch tools with the bottom nav; wide screens go back home and open the tool card.
+// There is no bottom navigation: a tool opens from the home tile and the top-left icon returns home.
 async function openTool(page, view) {
-  const tab = page.locator(`.bottom-nav [data-nav="${view}"]`);
-  if (await tab.isVisible()) return tab.click();
-  const back = page.locator(".app-back:visible").first();
-  if (await back.isVisible()) await back.click();
-  if (view !== "home") await page.locator(`.${view}-card`).click();
+  if (
+    view !== "home" &&
+    !(await page.locator('[data-view="home"]').isVisible())
+  )
+    await page.locator(".app-back:visible").first().click();
+  if (view === "home") return page.locator(".app-back:visible").first().click();
+  await page.locator(`.hm-${view}`).click();
 }
-async function createRecipe(page, name, photo = false) {
+async function chooseTopic(page, name) {
+  await page.locator("#topic-btn").click();
+  await page.locator(`[data-topic="${name}"]`).click();
+  await expect(page.locator("#topic-btn")).toContainText(name);
+}
+// Quick add needs only a name (and optionally a photo); `full` also fills the optional details.
+async function createRecipe(page, name, { photo = false, full = false } = {}) {
   await page.goto("/#/kitchen");
   await page.locator("#add-recipe").click();
   const form = page.locator("#recipe-form");
   await form.locator('[name="name"]').fill(name);
-  await form.locator('[name="ingredients"]').fill("鸡蛋 2 个\n番茄 1 个");
-  await form.locator('[name="steps"]').fill("鸡蛋打散。\n翻炒至完全熟透。");
-  await form.locator('[name="description"]').fill("记录一份家的味道。");
+  if (full) {
+    await form.locator(".kt-more summary").click();
+    await form.locator('[name="ingredients"]').fill("鸡蛋 2 个\n番茄 1 个");
+    await form.locator('[name="steps"]').fill("鸡蛋打散。\n翻炒至完全熟透。");
+    await form.locator('[name="description"]').fill("记录一份家的味道。");
+  }
   if (photo) {
     await form
       .locator('[name="photo"]')
@@ -38,7 +49,7 @@ async function createRecipe(page, name, photo = false) {
   }
   await form.locator('button[type="submit"]').click();
   await expect(page.locator("dialog")).toHaveCount(0);
-  await expect(page.locator(".recipe-card h3")).toContainText(name);
+  await expect(page.locator(".kt-name")).toContainText(name);
 }
 async function configureAndSync(page) {
   await openSettings(page, "sync");
@@ -51,7 +62,7 @@ async function configureAndSync(page) {
   await page.getByRole("button", { name: "关闭", exact: true }).click();
 }
 
-test("home links and all pages fit phone and desktop widths", async ({
+test("every page fits the screen without page scrolling or bottom navigation", async ({
   page,
 }) => {
   const errors = watchErrors(page);
@@ -60,26 +71,36 @@ test("home links and all pages fit phone and desktop widths", async ({
     ["/#/picker", "picker"],
     ["/#/timer", "timer"],
     ["/#/kitchen", "kitchen"],
+    ["/#/calendar", "calendar"],
   ]) {
     await page.goto(path);
     await expect(page.locator(`[data-view="${view}"] h1`)).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBeTruthy();
+    await page.waitForTimeout(300);
+    const fit = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth <= innerWidth,
+      height: document.documentElement.scrollHeight <= innerHeight,
+      bodyScroll: document.body.scrollHeight <= innerHeight,
+    }));
+    expect(fit, view).toEqual({ width: true, height: true, bodyScroll: true });
     await expect(page.locator("body")).toHaveAttribute("data-app", view);
-    await expect(page.locator(`[data-nav="${view}"]`).first()).toHaveClass(
-      /active/,
-    );
+    await expect(page.locator(".bottom-nav, .desktop-nav")).toHaveCount(0);
+    if (view !== "home")
+      await expect(page.locator(".app-back:visible")).toBeVisible();
   }
-  await expect(page.locator(".recipe-card")).toHaveCount(24);
-  await page.locator(".recipe-card").last().scrollIntoViewIfNeeded();
+  await page.goto("/#/kitchen");
+  await expect(page.locator(".kt-card")).toHaveCount(24);
+  await page.locator(".kt-card").last().scrollIntoViewIfNeeded();
   await page.waitForFunction(() =>
     [...document.images].every(
       (image) => image.complete && image.naturalWidth > 0,
     ),
   );
+  // Scroll regions never show a scrollbar.
+  expect(
+    await page
+      .locator(".kt-scroll")
+      .evaluate((element) => getComputedStyle(element).scrollbarWidth),
+  ).toBe("none");
   expect(errors).toEqual([]);
 });
 
@@ -88,7 +109,7 @@ test("switching tools stays in one document and keeps each view alive", async ({
 }) => {
   const errors = watchErrors(page);
   await page.goto("/#/picker");
-  await page.locator('[data-topic="玩什么"]').click();
+  await chooseTopic(page, "玩什么");
   await expect(page.locator("#picker-scene")).toHaveAttribute(
     "data-ready",
     "true",
@@ -97,15 +118,19 @@ test("switching tools stays in one document and keeps each view alive", async ({
     window.spaMarker = true;
     window.pickerCanvas = document.querySelector("#picker-scene canvas");
   });
+  await openTool(page, "home");
+  await expect(page.locator('[data-view="home"] h1')).toBeVisible();
+  await expect(page.locator(".site-header")).toBeVisible();
   await openTool(page, "kitchen");
   await expect(page).toHaveURL(/#\/kitchen$/);
   await expect(page.locator('[data-view="kitchen"]')).toBeVisible();
   await expect(page.locator('[data-view="picker"]')).toBeHidden();
   await expect(page.locator(".site-header")).toBeHidden();
   await page.locator('[data-tab="favorites"]').click();
+  await openTool(page, "home");
   await openTool(page, "picker");
   await expect(page.locator('[data-view="picker"]')).toBeVisible();
-  await expect(page.locator('[data-topic="玩什么"]')).toHaveClass(/active/);
+  await expect(page.locator("#topic-btn")).toContainText("玩什么");
   expect(
     await page.evaluate(
       () =>
@@ -113,13 +138,11 @@ test("switching tools stays in one document and keeps each view alive", async ({
         window.pickerCanvas === document.querySelector("#picker-scene canvas"),
     ),
   ).toBe(true);
+  await openTool(page, "home");
   await openTool(page, "kitchen");
   await expect(page.locator('[data-tab="favorites"]')).toHaveClass(/active/);
   await page.goBack();
   await expect(page).not.toHaveURL(/#\/kitchen/);
-  await openTool(page, "home");
-  await expect(page.locator('[data-view="home"] h1')).toBeVisible();
-  await expect(page.locator(".site-header")).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -127,12 +150,12 @@ test("cuisine, ingredient search and recipe instructions work", async ({
   page,
 }) => {
   await page.goto("/#/kitchen");
-  await page.locator('[data-cuisine="粤菜"]').click();
-  await expect(page.locator(".recipe-card")).toHaveCount(2);
-  await page.locator('[data-cuisine="全部"]').click();
+  await page.locator("#cuisine-select").selectOption("粤菜");
+  await expect(page.locator(".kt-card")).toHaveCount(2);
+  await page.locator("#cuisine-select").selectOption("全部");
   await page.locator("#recipe-search").fill("荸荠");
-  await expect(page.locator(".recipe-card")).toHaveCount(1);
-  await page.locator(".recipe-title-button").click();
+  await expect(page.locator(".kt-card")).toHaveCount(1);
+  await page.locator(".kt-name").click();
   await expect(page.locator(".modal-heading h2")).toHaveText("清炖狮子头");
   await expect(page.locator(".cooking-steps li")).toHaveCount(4);
   await page.locator(".ingredient-list input").first().check();
@@ -142,22 +165,67 @@ test("cuisine, ingredient search and recipe instructions work", async ({
   await expect(page.locator(".empty-state h3")).toHaveText("还没找到这道味道");
 });
 
-test("all random modes use custom options and persist history", async ({
+test("a recipe needs only a name; details and photo are optional", async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await createRecipe(page, "外婆的红烧肉");
+  await expect(page.locator(".kt-meta")).toContainText("家常菜");
+  await page.locator(".kt-name").click();
+  await expect(page.locator(".modal-heading h2")).toHaveText("外婆的红烧肉");
+  await expect(page.locator(".detail-meta")).not.toContainText("分钟");
+  await expect(page.locator(".cooking-steps")).toHaveCount(0);
+  await expect(page.locator(".recipe-detail-modal")).toContainText(
+    "还没写材料和做法",
+  );
+  // Details can be added later.
+  await page.locator("#edit-recipe").click();
+  await expect(page.locator(".kt-more")).not.toHaveAttribute("open", "");
+  await page.locator(".kt-more summary").click();
+  await page.locator('[name="steps"]').fill("焯水。\n小火慢炖。");
+  await page.locator('#recipe-form button[type="submit"]').click();
+  await page.locator(".kt-name").click();
+  await expect(page.locator(".cooking-steps li")).toHaveCount(2);
+  expect(errors).toEqual([]);
+});
+
+test("random picker: dropdown categories, editable options, every animation mode", async ({
   page,
 }) => {
   const errors = watchErrors(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/#/picker");
-  await page.locator('[data-topic="自定义"]').click();
-  await page.locator("#bulk-edit").click();
-  await page.locator("#bulk-form textarea").fill("喝茶\n散步");
-  await page.locator('#bulk-form button[type="submit"]').click();
-  await page.locator("#sound-toggle").uncheck();
+  // The menu lists every category and offers to create a new one.
+  await page.locator("#topic-btn").click();
+  await expect(page.locator("#topic-menu button[data-topic]")).toHaveCount(4);
+  await page.locator("[data-new-topic]").click();
+  await page.locator("#ps-newname").fill("今晚看什么");
+  await page.locator('#ps-create button[type="submit"]').click();
+  await expect(page.locator("#topic-btn")).toContainText("今晚看什么");
+  const option = (index) =>
+    page.locator("#ps-list .ps-option input").nth(index);
+  await option(0).fill("喝茶");
+  await option(0).blur();
+  await option(1).fill("散步");
+  await option(1).blur();
+  await page.locator("#ps-add input").fill("看书");
+  await page.locator('#ps-add button[type="submit"]').click();
+  await expect(page.locator("#ps-list .ps-option")).toHaveCount(3);
+  await page.locator("[data-done]").click();
+  await expect(page.locator("dialog")).toHaveCount(0);
+  await expect(page.locator("#option-count")).toHaveText("3 项");
+  // Muted, so the headless run never touches audio.
+  if (
+    (await page.locator("#sound-toggle").getAttribute("aria-pressed")) ===
+    "true"
+  )
+    await page.locator("#sound-toggle").click();
+  const choices = ["喝茶", "散步", "看书"];
   for (const mode of ["wheel", "capsule", "pixel"]) {
     await page.locator(`[data-mode="${mode}"]`).click();
     await page.locator("#start-pick").click();
     await expect(page.locator(".result-value")).toBeVisible();
-    expect(["喝茶", "散步"]).toContain(
+    expect(choices).toContain(
       await page.locator(".result-value").textContent(),
     );
     if (mode === "wheel") {
@@ -165,7 +233,7 @@ test("all random modes use custom options and persist history", async ({
         .locator("#picker-scene")
         .evaluate((element) =>
           Math.floor(
-            (((Number(element.dataset.angle) % 360) + 360) % 360) / 180,
+            (((Number(element.dataset.angle) % 360) + 360) % 360) / 120,
           ),
         );
       await expect(page.locator("#picker-scene")).toHaveAttribute(
@@ -173,24 +241,27 @@ test("all random modes use custom options and persist history", async ({
         "webgl",
       );
       expect(await page.locator(".result-value").textContent()).toBe(
-        ["喝茶", "散步"][selectedIndex],
+        choices[selectedIndex],
       );
       await expect(page.locator(".result-popover.show strong")).toHaveText(
         await page.locator(".result-value").textContent(),
       );
     }
     await expect(page.locator("dialog")).toHaveCount(0);
-    await expect(page.locator(".option-row.selected input")).toHaveValue(
-      await page.locator(".result-value").textContent(),
-    );
     await page.locator("#accept-pick").click();
   }
+  // The new category, its options and the chosen animation survive a reload.
   await page.reload();
-  await expect(page.locator(".option-row input").first()).toHaveValue("喝茶");
+  await expect(page.locator("#topic-btn")).toContainText("今晚看什么");
   await expect(page.locator('[data-mode="pixel"]')).toHaveAttribute(
     "aria-selected",
     "true",
   );
+  await page.locator("#edit-options").click();
+  await expect(page.locator("#ps-list .ps-option input").first()).toHaveValue(
+    "喝茶",
+  );
+  await page.locator("[data-done]").click();
   await page.locator("#picker-history").click();
   await expect(page.locator(".history-row")).toHaveCount(3);
   await page.locator(".delete-pick").first().click();
@@ -201,11 +272,11 @@ test("all random modes use custom options and persist history", async ({
 test("photo recipe, favorite and rating survive reload", async ({ page }) => {
   const errors = watchErrors(page);
   const name = "我的<家常>菜";
-  await createRecipe(page, name, true);
-  expect(await page.locator(".recipe-card img").getAttribute("src")).toMatch(
+  await createRecipe(page, name, { photo: true, full: true });
+  expect(await page.locator(".kt-card img").getAttribute("src")).toMatch(
     /^data:image\/jpeg;base64,/,
   );
-  await page.locator(".recipe-title-button").click();
+  await page.locator(".kt-name").click();
   await page.locator("#detail-favorite").click();
   await expect(page.locator("#detail-favorite")).toHaveText("已收藏");
   await page.locator("#review-recipe").click();
@@ -219,7 +290,7 @@ test("photo recipe, favorite and rating survive reload", async ({ page }) => {
   await page.reload();
   await expect(page.locator(".review-card h3")).toHaveText(name);
   await page.locator('[data-tab="favorites"]').click();
-  await expect(page.locator(".recipe-card h3")).toHaveText(name);
+  await expect(page.locator(".kt-name")).toHaveText(name);
   await expect(page.locator(".recipe-rating")).toContainText("3.0");
   expect(errors).toEqual([]);
 });
@@ -269,7 +340,7 @@ test("backup exports without credentials, merges once and rejects malformed data
   });
   await expect(page.locator("dialog")).toHaveCount(0);
   await page.locator('[data-tab="favorites"]').click();
-  await expect(page.locator(".recipe-card")).toHaveCount(1);
+  await expect(page.locator(".kt-card")).toHaveCount(1);
   await openSettings(page, "data");
   await page.locator("#import-data").setInputFiles({
     name: "bad.json",
@@ -292,7 +363,7 @@ test("backup exports without credentials, merges once and rejects malformed data
   });
   await expect(page.locator("#toast")).toContainText("数据格式不正确");
   await page.locator(".modal-close").click();
-  await expect(page.locator(".recipe-card")).toHaveCount(1);
+  await expect(page.locator(".kt-card")).toHaveCount(1);
 });
 
 test("server sync transfers photos and propagates deletion between devices", async ({
@@ -301,7 +372,7 @@ test("server sync transfers photos and propagates deletion between devices", asy
 }, testInfo) => {
   const errors = watchErrors(page);
   const name = `同步菜-${testInfo.project.name}-${Date.now()}`;
-  await createRecipe(page, name, true);
+  await createRecipe(page, name, { photo: true, full: true });
   await configureAndSync(page);
   const secondContext = await browser.newContext({
     baseURL: "http://localhost:4173",
@@ -312,19 +383,19 @@ test("server sync transfers photos and propagates deletion between devices", asy
   try {
     await second.goto("/#/kitchen?tab=own");
     await configureAndSync(second);
-    const synced = second.locator(".recipe-card").filter({ hasText: name });
+    const synced = second.locator(".kt-card").filter({ hasText: name });
     await expect(synced).toHaveCount(1);
     expect(await synced.locator("img").getAttribute("src")).toMatch(
       /^data:image\/jpeg;base64,/,
     );
-    await synced.locator(".recipe-title-button").click();
+    await synced.locator(".kt-name").click();
     await second.locator("#delete-recipe").click();
     await second.locator("#confirm-delete").click();
     await expect(synced).toHaveCount(0);
     await configureAndSync(second);
     await configureAndSync(page);
     await expect(
-      page.locator(".recipe-card").filter({ hasText: name }),
+      page.locator(".kt-card").filter({ hasText: name }),
     ).toHaveCount(0);
     expect(errors).toEqual([]);
     expect(secondErrors).toEqual([]);
@@ -348,6 +419,7 @@ test("PWA manifests and all tools operate offline after installation cache", asy
     "./#/picker",
     "./#/kitchen",
     "./#/timer",
+    "./#/calendar",
   ]);
   for (const icon of [
     ...manifest.icons,
@@ -366,13 +438,19 @@ test("PWA manifests and all tools operate offline after installation cache", asy
       .evaluate((image) => image.complete && image.naturalWidth > 0),
   ).toBeTruthy();
   await page.locator(".modal-close").click();
+  await page.goto("/#/calendar");
+  await expect(page.locator('[data-view="calendar"] h1')).toBeVisible();
   await page.goto("/#/picker");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.locator("#sound-toggle").uncheck();
+  if (
+    (await page.locator("#sound-toggle").getAttribute("aria-pressed")) ===
+    "true"
+  )
+    await page.locator("#sound-toggle").click();
   await page.locator("#start-pick").click();
   await expect(page.locator(".result-value")).toBeVisible();
   await page.locator("#accept-pick").click();
   await page.goto("/");
-  await expect(page.locator(".activity")).toHaveCount(1);
+  await expect(page.locator(".hm-act")).toHaveCount(1);
   expect(errors).toEqual([]);
 });

@@ -26,12 +26,18 @@ export const presets = {
     "城市漫步 🚶",
   ],
   轮到谁: ["宝宝 👶", "爸爸 👨", "妈妈 👩"],
-  自定义: ["选项 A", "选项 B", "选项 C"],
+};
+export const topicEmoji = {
+  吃什么: "🍽️",
+  玩什么: "🎮",
+  去哪玩: "🧭",
+  轮到谁: "👨‍👩‍👧",
 };
 export const modes = [
   {
     id: "wheel",
     name: "幸运转盘",
+    short: "转盘",
     symbol: "🎡",
     action: "转一下",
     subtitle: "让好运，慢慢停下来",
@@ -39,6 +45,7 @@ export const modes = [
   {
     id: "capsule",
     name: "惊喜扭蛋",
+    short: "扭蛋",
     symbol: "🫧",
     action: "拧出惊喜",
     subtitle: "转动把手，拆开一份小幸运",
@@ -46,6 +53,7 @@ export const modes = [
   {
     id: "pixel",
     name: "像素顶骰子",
+    short: "顶骰子",
     symbol: "👾",
     action: "跳一下",
     subtitle: "蓄力、起跳，顶出今天的答案",

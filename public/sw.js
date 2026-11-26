@@ -26,6 +26,26 @@ self.addEventListener("activate", (event) => {
     })(),
   );
 });
+// Tapping a reminder brings the app to the front, on the page that sent it.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "./", SHELL).href;
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of windows) {
+        if (!client.url.startsWith(SHELL)) continue;
+        await client.focus();
+        client.postMessage({ type: "OPEN", url: target });
+        return;
+      }
+      await self.clients.openWindow(target);
+    })(),
+  );
+});
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);

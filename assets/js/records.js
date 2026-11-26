@@ -16,7 +16,17 @@ const strings = (value, min, max, width) =>
   value.length <= max &&
   value.every((item) => text(item, width, true));
 const modes = ["wheel", "capsule", "pixel"];
-const topics = ["吃什么", "玩什么", "去哪玩", "轮到谁", "自定义"];
+const category = (value) => text(value, 12, true);
+const uniqueStrings = (value, min, max, width) =>
+  strings(value, min, max, width) && new Set(value).size === value.length;
+const clockTime = (value) =>
+  typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+const ints = (value, min, max, count) =>
+  Array.isArray(value) &&
+  value.length >= 1 &&
+  value.length <= count &&
+  new Set(value).size === value.length &&
+  value.every((item) => Number.isInteger(item) && item >= min && item <= max);
 const date = (value) =>
   typeof value === "string" &&
   /^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -31,15 +41,15 @@ function validPayload(record) {
         id(payload.id) &&
         record.id === `recipe:${payload.id}` &&
         text(payload.name, 40, true) &&
-        text(payload.cuisine, 40, true) &&
+        text(payload.cuisine, 40) &&
         text(payload.region, 40) &&
         Number.isInteger(payload.minutes) &&
-        payload.minutes >= 1 &&
+        payload.minutes >= 0 &&
         payload.minutes <= 1440 &&
-        ["简单", "适中", "进阶"].includes(payload.difficulty) &&
+        ["", "简单", "适中", "进阶"].includes(payload.difficulty) &&
         text(payload.description, 300) &&
-        strings(payload.ingredients, 1, 100, 1000) &&
-        strings(payload.steps, 1, 100, 2000) &&
+        strings(payload.ingredients, 0, 100, 1000) &&
+        strings(payload.steps, 0, 100, 2000) &&
         text(payload.tip, 300) &&
         image(payload.image)
       );
@@ -81,7 +91,7 @@ function validPayload(record) {
       );
     case "pick":
       return (
-        topics.includes(payload.topic) &&
+        category(payload.topic) &&
         text(payload.result, 30, true) &&
         modes.includes(payload.mode) &&
         strings(payload.options, 2, 16, 30) &&
@@ -91,16 +101,37 @@ function validPayload(record) {
     case "pickset":
       return (
         record.id === "pickset:current" &&
-        topics.includes(payload.topic) &&
         modes.includes(payload.mode) &&
         typeof payload.sound === "boolean" &&
         payload.sets &&
         typeof payload.sets === "object" &&
-        topics.every(
-          (topic) =>
-            strings(payload.sets[topic], 2, 16, 30) &&
-            new Set(payload.sets[topic]).size === payload.sets[topic].length,
+        !Array.isArray(payload.sets) &&
+        Object.keys(payload.sets).length >= 1 &&
+        Object.keys(payload.sets).length <= 30 &&
+        Object.hasOwn(payload.sets, payload.topic) &&
+        Object.entries(payload.sets).every(
+          ([name, options]) =>
+            category(name) && uniqueStrings(options, 2, 16, 30),
         )
+      );
+    case "event":
+      return (
+        id(payload.id) &&
+        record.id === `event:${payload.id}` &&
+        text(payload.title, 40, true) &&
+        text(payload.emoji, 8) &&
+        ["weekly", "once", "monthly"].includes(payload.repeat) &&
+        clockTime(payload.time) &&
+        ints(payload.remind, 0, 10080, 8) &&
+        text(payload.note, 200) &&
+        typeof payload.enabled === "boolean" &&
+        (payload.repeat === "weekly"
+          ? ints(payload.weekdays, 0, 6, 7)
+          : payload.repeat === "once"
+            ? date(payload.date)
+            : Number.isInteger(payload.monthDay) &&
+              payload.monthDay >= 0 &&
+              payload.monthDay <= 28)
       );
     default:
       return false;
@@ -115,9 +146,15 @@ export function validRecords(records) {
       (record) =>
         record &&
         text(record.id, 200, true) &&
-        ["recipe", "review", "order", "pick", "pickset", "favorite"].includes(
-          record.type,
-        ) &&
+        [
+          "recipe",
+          "review",
+          "order",
+          "pick",
+          "pickset",
+          "favorite",
+          "event",
+        ].includes(record.type) &&
         record.id.startsWith(`${record.type}:`) &&
         time(record.updatedAt) &&
         (record.deletedAt === null || time(record.deletedAt)) &&

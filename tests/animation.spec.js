@@ -3,14 +3,22 @@ import { test, expect } from "@playwright/test";
 test("physical animation progresses before showing an inline matching result", async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(120000);
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/#/picker");
-  const options = await page.locator(".selection-panel").boundingBox();
+  // The 3D stage is the core of the page: below the slim bar, filling the space above the button.
+  const bar = await page.locator(".pk-bar").boundingBox();
   const stage = await page.locator("#picker-scene").boundingBox();
-  expect(options.y + options.height).toBeLessThan(stage.y);
-  await page.locator("#sound-toggle").uncheck();
+  const button = await page.locator("#start-pick").boundingBox();
+  expect(bar.y + bar.height).toBeLessThanOrEqual(stage.y + 1);
+  expect(stage.y + stage.height).toBeLessThanOrEqual(button.y + 1);
+  expect(stage.height).toBeGreaterThan(button.y / 2);
+  if (
+    (await page.locator("#sound-toggle").getAttribute("aria-pressed")) ===
+    "true"
+  )
+    await page.locator("#sound-toggle").click();
   await page.locator('[data-mode="capsule"]').click();
   await expect(page.locator("#picker-scene")).toHaveAttribute(
     "data-renderer",
@@ -36,7 +44,7 @@ test("physical animation progresses before showing an inline matching result", a
   await expect(page.locator("#start-pick")).toBeDisabled();
   await expect(page.locator(".result-popover")).toBeHidden();
   // Headless browsers render WebGL in software, which can run below real time.
-  await expect(page.locator("#scene-result")).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#scene-result")).toBeVisible({ timeout: 60000 });
   await expect(page.locator("#picker-scene")).toHaveAttribute(
     "data-phase",
     "result",
@@ -50,9 +58,6 @@ test("physical animation progresses before showing an inline matching result", a
   await page.waitForTimeout(1500);
   expect(await page.evaluate(() => window.popoverShown)).toBeNull();
   await expect(page.locator(".result-popover")).toBeHidden();
-  await expect(page.locator(".option-row.selected input")).toHaveValue(
-    await page.locator(".result-value").textContent(),
-  );
   const before = await page.locator("#picker-scene canvas").screenshot();
   const bounds = await page.locator("#picker-scene canvas").boundingBox();
   await page.mouse.move(

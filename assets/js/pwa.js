@@ -14,6 +14,10 @@ export async function initPWA() {
       `${import.meta.env.BASE_URL}sw.js`,
     );
     navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data?.type === "OPEN") {
+        const { hash } = new URL(event.data.url);
+        if (hash) location.hash = hash;
+      }
       if (event.data?.type === "OFFLINE_READY") {
         offlineReady = true;
         window.dispatchEvent(new Event("little-day:offline-ready"));

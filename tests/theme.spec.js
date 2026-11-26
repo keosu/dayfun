@@ -18,11 +18,6 @@ test("theme preference persists across tools and updates the 3D scene", async ({
     "content",
     "#171a22",
   );
-  expect(
-    await page
-      .locator(".settings-modal")
-      .evaluate((element) => element.scrollHeight <= element.clientHeight + 1),
-  ).toBe(true);
   await page.locator(".modal-close").click();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -39,7 +34,7 @@ test("theme preference persists across tools and updates the 3D scene", async ({
   expect(errors).toEqual([]);
 });
 
-test("launcher fits without vertical scrolling and the scroll thumb fades", async ({
+test("the page never scrolls and settings open as a sheet inside the screen", async ({
   page,
 }) => {
   await page.goto("/");
@@ -49,13 +44,20 @@ test("launcher fits without vertical scrolling and the scroll thumb fades", asyn
     ),
   ).toBe(true);
   await expect(page.locator("footer")).toHaveCount(0);
+  await page.locator(".settings-trigger:visible").first().click();
+  const box = await page.locator(".settings-modal").boundingBox();
+  const viewport = page.viewportSize();
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+  await page.locator(".modal-close").click();
   await page.goto("/#/kitchen");
   await page.locator('[data-open="tomato-egg"]').first().click();
-  await page.locator("dialog").evaluate((element) => {
-    element.scrollTop = element.scrollHeight;
-  });
-  await expect(page.locator("dialog")).toHaveClass(/is-scrolling/);
-  await expect(page.locator("dialog")).not.toHaveClass(/is-scrolling/, {
-    timeout: 3000,
-  });
+  const sheet = page.locator("dialog");
+  await expect(sheet).toHaveClass(/sheet/);
+  expect(
+    await sheet
+      .locator(".modal-content")
+      .evaluate((element) => getComputedStyle(element).scrollbarWidth),
+  ).toBe("none");
 });

@@ -36,6 +36,16 @@ const paths = {
   dice: '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01" stroke-width="3"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>',
   copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/>',
+  bell: '<path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4l2-2ZM10 21h4"/>',
+  calendar:
+    '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4m8-4v4"/>',
+  minus: '<path d="M5 12h14"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4ZM13 7l4 4"/>',
+  volume:
+    '<path d="M4 9v6h4l5 4V5L8 9H4Zm13-1a5 5 0 0 1 0 8m2.5-10.5a9 9 0 0 1 0 13"/>',
+  mute: '<path d="M4 9v6h4l5 4V5L8 9H4Zm13 0 5 6m0-6-5 6"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
 };
 
 export function icon(name, className = "") {

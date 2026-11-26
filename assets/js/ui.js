@@ -9,8 +9,6 @@ import {
 } from "./sync.js";
 import { initPWA, installApp, toggleFullscreen, offlineStatus } from "./pwa.js";
 import { settingsView, initSettingsView } from "./settings-view.js";
-import { initScrollbars } from "./scrollbars.js";
-
 export const $ = (selector, root = document) => root.querySelector(selector);
 export const $$ = (selector, root = document) => [
   ...root.querySelectorAll(selector),
@@ -42,30 +40,6 @@ export function dateLabel(timestamp) {
   return `${today ? "今天" : `${date.getMonth() + 1}月${date.getDate()}日`} ${date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
 }
 
-export const links = [
-  { id: "home", label: "工具首页", short: "首页", href: "#/", icon: "grid" },
-  {
-    id: "picker",
-    label: "随心选",
-    short: "随心选",
-    href: "#/picker",
-    icon: "shuffle",
-  },
-  {
-    id: "kitchen",
-    label: "今天吃什么",
-    short: "小厨房",
-    href: "#/kitchen",
-    icon: "bowl",
-  },
-  {
-    id: "timer",
-    label: "搞笑倒计时",
-    short: "倒计时",
-    href: "#/timer",
-    icon: "clock",
-  },
-];
 export function initShell() {
   $("#app").innerHTML = /* HTML */ ` <header class="site-header">
       <div class="header-inner">
@@ -78,9 +52,6 @@ export function initShell() {
             height="36"
           /><span>趣日常<small>DAYFUN</small></span></a
         >
-        <nav class="desktop-nav" aria-label="主导航">
-          ${links.map((link) => /* HTML */ `<a href="${link.href}" data-nav="${link.id}">${icon(link.icon)}${link.label}</a>`).join("")}
-        </nav>
         <div class="header-actions">
           <span class="local-badge" id="local-badge"
             ><span class="status-dot"></span
@@ -92,13 +63,6 @@ export function initShell() {
       </div>
     </header>
     <main class="page" id="main"></main>
-    <nav class="bottom-nav" aria-label="移动端导航">
-      ${links.map((link) => /* HTML */ `<a href="${link.href}" data-nav="${link.id}">${icon(link.icon)}<span>${link.short}</span></a>`).join("")}<button
-        class="settings-trigger"
-      >
-        ${icon("settings")}<span>设置</span>
-      </button>
-    </nav>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>`;
   document.addEventListener("click", (event) => {
     if (event.target.closest(".settings-trigger"))
@@ -121,31 +85,26 @@ export function initShell() {
     console.error(event.reason);
   });
   initPWA();
-  initScrollbars();
   startAutoSync();
   updateBadge();
 }
-// Tool pages have no top bar; on wide screens (no bottom nav) these sit beside the title.
-export const appBackButton = () =>
-  /* HTML */ `<a class="icon-button app-back" href="#/" aria-label="返回首页"
-    >${icon("back")}</a
-  >`;
-export const appSettingsButton = () =>
-  /* HTML */ `<button
-    class="icon-button settings-trigger app-settings"
-    aria-label="设置"
-  >
-    ${icon("settings")}
-  </button>`;
+// Every tool has the same slim top bar: back to home, the title, tool actions, settings.
+export function toolbar(title, actions = "") {
+  return /* HTML */ `<header class="toolbar">
+    <a class="tb-button app-back" href="#/" aria-label="返回首页"
+      >${icon("back")}</a
+    >
+    <h1 class="tb-title">${title}</h1>
+    <div class="tb-actions">
+      ${actions}<button class="tb-button settings-trigger" aria-label="设置">
+        ${icon("settings")}
+      </button>
+    </div>
+  </header>`;
+}
 export function setActivePage(page) {
   $("#main").className = `page ${page}-page`;
   document.body.dataset.app = page;
-  $$("[data-nav]").forEach((link) => {
-    const active = link.dataset.nav === page;
-    link.classList.toggle("active", active);
-    if (active) link.setAttribute("aria-current", "page");
-    else link.removeAttribute("aria-current");
-  });
 }
 function updateBadge() {
   $("#local-badge").lastElementChild.textContent = navigator.onLine

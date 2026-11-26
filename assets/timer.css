@@ -1,43 +1,38 @@
-/* Funny countdown: a talking clock face that gets more frantic the longer it is ignored. */
-.timer-page .page-intro,
-.timer-layout {
-  max-width: 1000px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.timer-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-.timer-layout > * {
-  min-width: 0;
+/* Funny countdown: one big talking clock; everything else lives in a sheet. */
+.tm {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
 }
 .timer-stage {
   --shake: 3deg;
+  flex: 1;
+  min-height: 0;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
-  padding: 22px 18px 24px;
-  border-radius: 22px;
+  justify-content: space-evenly;
+  gap: 10px;
+  padding: 18px 16px;
+  border-radius: 28px;
   background: #f6efda;
   overflow: hidden;
   transition: background 0.4s;
 }
 .timer-bubble {
   position: relative;
-  max-width: 94%;
-  min-height: 52px;
-  padding: 12px 18px;
-  border-radius: 18px;
+  max-width: min(94%, 460px);
+  min-height: 56px;
+  padding: 12px 20px;
+  border-radius: 20px;
   background: #fff;
   box-shadow: 0 6px 18px #6b5a2a14;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
-  line-height: 1.6;
+  line-height: 1.55;
   text-align: center;
   display: flex;
   align-items: center;
@@ -59,8 +54,9 @@
 }
 .timer-clock {
   position: relative;
-  width: min(300px, 70vw);
+  width: min(86vw, 52dvh, 340px);
   aspect-ratio: 1;
+  flex: none;
 }
 .timer-ring {
   position: absolute;
@@ -69,7 +65,7 @@
 }
 .timer-ring circle {
   fill: none;
-  stroke-width: 9;
+  stroke-width: 8;
 }
 .ring-track {
   stroke: #6b5a2a14;
@@ -89,24 +85,28 @@
   justify-content: center;
 }
 .timer-face {
-  font-size: 74px;
+  font-size: clamp(54px, 9dvh, 84px);
   line-height: 1.1;
   animation: face-bob 2.8s ease-in-out infinite;
 }
 .timer-digits {
-  font-size: 46px;
+  font-size: clamp(40px, 7.4dvh, 58px);
   font-weight: 800;
   letter-spacing: 1px;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
+.timer-digits[data-tap] {
+  cursor: pointer;
+  border-bottom: 2px dashed #00000026;
+}
 .timer-task-name {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--soft-text);
 }
 .timer-over {
   min-height: 20px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--coral);
 }
@@ -114,7 +114,7 @@
   position: absolute;
   top: 2%;
   z-index: 2;
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 900;
   color: var(--coral);
   opacity: 0;
@@ -128,20 +128,22 @@
   transform: rotate(18deg);
 }
 .timer-actions {
+  flex: none;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
 }
 .timer-actions .button {
-  min-height: 46px;
-  font-size: 15px;
-  padding: 10px 22px;
+  min-height: 50px;
+  font-size: 16px;
+  padding: 10px 24px;
+  border-radius: 16px;
 }
 .timer-actions .timer-main {
-  min-height: 54px;
-  font-size: 18px;
-  padding: 12px 30px;
+  min-height: 56px;
+  font-size: 19px;
+  padding: 12px 34px;
 }
 
 .timer-stage[data-status="running"] .timer-face {
@@ -202,91 +204,127 @@
   animation: none;
   background: #f6efda;
 }
-
-.timer-controls h3 {
-  font-size: 14px;
-  font-weight: 700;
-  margin: 0 0 10px;
-}
-.timer-controls h3:not(:first-child) {
-  margin-top: 18px;
-}
-.timer-tasks,
-.timer-quick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.timer-quick {
-  margin-top: 10px;
-}
-.timer-controls .topic-chip {
-  font-size: 13px;
-}
-.timer-controls .topic-chip:disabled,
-.timer-set input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.timer-set {
-  display: flex;
-  gap: 14px;
-}
-.timer-set label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--soft-text);
-}
-.timer-set input {
-  width: 76px;
-  padding: 8px 6px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--field);
-  color: var(--ink);
-  font-size: 22px;
-  font-weight: 700;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-.timer-switches {
-  display: flex;
-  gap: 24px;
-  margin-top: 20px;
-}
-.timer-switches .switch-label {
-  font-size: 13px;
-}
-.timer-switches .switch-label input {
-  top: 50%;
-  margin-top: -10px;
-}
-.timer-controls .fine-print {
-  margin-top: 16px;
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--soft-text);
-}
-
-[data-theme="dark"] .timer-stage,
-[data-theme="dark"] .timer-stage[data-status="idle"] {
+:root[data-theme="dark"] .timer-stage,
+:root[data-theme="dark"] .timer-stage[data-status="idle"] {
   background: #2b2a22;
 }
-[data-theme="dark"] .timer-stage[data-level="2"] {
+:root[data-theme="dark"] .timer-stage[data-level="2"] {
   background: #33281f;
 }
-[data-theme="dark"] .timer-stage[data-level="4"] {
+:root[data-theme="dark"] .timer-stage[data-level="4"] {
   background: #29273a;
 }
-[data-theme="dark"] .timer-bubble {
+:root[data-theme="dark"] .timer-bubble {
   background: var(--panel);
   color: var(--ink);
   box-shadow: none;
 }
-[data-theme="dark"] .ring-track {
+:root[data-theme="dark"] .ring-track {
   stroke: #ffffff14;
+}
+:root[data-theme="dark"] .timer-digits[data-tap] {
+  border-bottom-color: #ffffff30;
+}
+
+/* Settings sheet. */
+.tm-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.tm-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 2px;
+  border-radius: 14px;
+  background: var(--field);
+  border: 1.5px solid transparent;
+  font-size: 13px;
+  font-weight: 650;
+}
+.tm-tile span {
+  font-size: 26px;
+  line-height: 1.2;
+}
+.tm-tile.active {
+  border-color: var(--coral);
+  background: #ed81791a;
+}
+.tm-time {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 16px 0 12px;
+}
+.tm-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tm-step button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--subtle);
+  display: grid;
+  place-items: center;
+  touch-action: none;
+  user-select: none;
+}
+.tm-step b {
+  min-width: 44px;
+  text-align: center;
+  font-size: 36px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.tm-step small {
+  font-size: 14px;
+  color: var(--soft-text);
+  margin-right: 2px;
+}
+.tm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.tm-chips button {
+  padding: 7px 14px;
+  border-radius: 99px;
+  background: var(--field);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--soft-text);
+}
+.tm-chips button.active {
+  background: #ed81791a;
+  border-color: var(--coral);
+  color: var(--coral);
+  font-weight: 700;
+}
+.tm-switches {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 2px 4px;
+}
+.tm-switches .switch-label {
+  font-size: 14px;
+}
+.tm-switches .switch-label input {
+  top: 50%;
+  margin-top: -10px;
+}
+.tm-hint {
+  min-height: 20px;
+  margin: 8px 2px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--soft-text);
 }
 
 @keyframes bubble-pop {
@@ -347,12 +385,12 @@
     translate: 0 -4px;
   }
 }
-/* A glow rather than a scale, so the button never moves under the finger. */
 @keyframes ring-blink {
   50% {
     stroke: #f5c34d;
   }
 }
+/* A glow rather than a scale, so the button never moves under the finger. */
 @keyframes button-pulse {
   from {
     box-shadow: 0 0 0 0 #ed8179aa;
@@ -384,46 +422,14 @@
   }
 }
 
-@media (max-width: 800px) {
-  .timer-layout {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 600px) {
-  .timer-page .intro-row p {
-    display: none;
-  }
-  .timer-layout {
-    gap: 12px;
-  }
-  .timer-stage {
-    gap: 14px;
-    padding: 16px 12px 18px;
-  }
+@media (max-height: 640px) {
   .timer-bubble {
-    font-size: 15px;
     min-height: 48px;
-    padding: 10px 14px;
+    font-size: 15px;
+    padding: 8px 14px;
   }
   .timer-clock {
-    width: min(232px, 62vw);
-  }
-  .timer-face {
-    font-size: 56px;
-  }
-  .timer-digits {
-    font-size: 38px;
-  }
-  .timer-tasks {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
-  }
-  .timer-tasks .topic-chip {
-    flex-shrink: 0;
-  }
-  .timer-switches {
-    margin-top: 16px;
+    width: min(86vw, 46dvh, 340px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
