@@ -77,7 +77,7 @@ test("首页：四个磁贴、不滚动、没有底部导航", async ({ page }, 
 
 test("传感器体检：开始后各项变为正常", async ({ page }, info) => {
   await page.goto("/#/sensors");
-  await expect(page.locator(".card")).toHaveCount(10);
+  // 传感器卡片 10 张（data-id），另有一张摄像头入口卡片不计入体检\n  await expect(page.locator(".card[data-id]")).toHaveCount(10);
   await page.click("#start");
   await page.evaluate(() =>
     window.__run(500, () => ({ u: [0, 0.8, 0.6], rot: [10, -5, 3] })),

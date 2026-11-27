@@ -14,6 +14,13 @@ export default defineConfig({
     permissions: ["geolocation", "accelerometer", "gyroscope", "magnetometer"],
     geolocation: { latitude: 31.2304, longitude: 121.4737, accuracy: 12 },
     trace: "off",
+    // 摄像头用假设备：自动允许权限，画面是一段测试图案（不含真人脸）
+    launchOptions: {
+      args: [
+        "--use-fake-ui-for-media-stream",
+        "--use-fake-device-for-media-stream",
+      ],
+    },
   },
   webServer: {
     command: `node server/server.mjs --port 4543 --http-port ${PORT}`,

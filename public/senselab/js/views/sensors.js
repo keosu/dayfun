@@ -149,6 +149,15 @@ export default {
     }
     $("#okTotal", root).textContent = `/ ${CARDS.length} 项可用`;
 
+    // 摄像头不是传感器卡片，单独一张，点进去是完整的识别页面
+    const cam = h(`
+      <a class="card cam-entry" href="#/camera">
+        <span class="ci">📷</span>
+        <div class="cm"><strong>摄像头识别</strong><span class="val">人脸、姿态、手势；画面只在本机处理</span></div>
+        <span class="chip">打开</span>
+      </a>`);
+    cardsEl.append(cam);
+
     function set(id, status, val, chipText) {
       const c = cards[id];
       c.status = status;

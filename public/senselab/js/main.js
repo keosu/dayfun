@@ -7,6 +7,7 @@ const ROUTES = {
   "/sensors": { title: "传感器体检", load: () => import("./views/sensors.js") },
   "/gestures": { title: "动作识别", load: () => import("./views/gestures.js") },
   "/pad": { title: "体感手柄", load: () => import("./views/pad.js") },
+  "/camera": { title: "摄像头识别", load: () => import("./views/camera.js") },
   "/system": { title: "系统能力", load: () => import("./views/system.js") },
 };
 

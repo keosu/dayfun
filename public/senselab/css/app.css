@@ -1268,3 +1268,160 @@ a {
     font-size: clamp(22px, 7dvh, 30px);
   }
 }
+
+/* ---------- 摄像头识别 ---------- */
+
+.cam-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.g-status[data-state="loading"] {
+  color: var(--orange);
+}
+
+.g-status[data-state="error"] {
+  color: var(--bad);
+}
+
+.g-status[data-state="running"] {
+  color: var(--ok);
+}
+
+/* 竖屏：画面高度按视口高度取值，宽度由 3:4 比例推出，保证整页不用滚动 */
+.cam-stage {
+  position: relative;
+  flex: none;
+  height: clamp(260px, 50dvh, 620px);
+  aspect-ratio: 3 / 4;
+  max-width: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #1b1e26;
+  box-shadow: var(--shadow);
+}
+
+.cam-stage video,
+.cam-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 前置摄像头画面镜像，像照镜子一样；画布跟着一起镜像，位置就对得上 */
+.cam-stage.mirror video,
+.cam-stage.mirror canvas {
+  transform: scaleX(-1);
+}
+
+.cam-idle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #e8e5df;
+  background: #1b1e26;
+}
+
+.cam-idle-icon {
+  font-size: 52px;
+  line-height: 1.1;
+}
+
+.cam-idle small {
+  padding: 0 18px;
+  font-size: 13px;
+  color: #9ba1b0;
+}
+
+.cam-read {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 62px;
+  justify-content: center;
+}
+
+.cam-big {
+  font-size: clamp(24px, 4.4dvh, 32px);
+  line-height: 1.2;
+}
+
+.cam-detail {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cam-controls {
+  flex: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.cam-controls #camModes {
+  width: 100%;
+}
+
+/* 横屏手机（矮屏）：画面在左，读数和按钮在右，同样不滚动 */
+@media (orientation: landscape) and (max-height: 540px) {
+  .cam-page {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: stretch;
+    gap: 6px 18px;
+    text-align: left;
+    width: 100%;
+  }
+
+  .cam-stage {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    height: calc(100dvh - 104px);
+    justify-self: center;
+  }
+
+  #camStatus {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .cam-read {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+  }
+
+  #camHistory {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: start;
+  }
+
+  .cam-controls {
+    grid-column: 2;
+    grid-row: 4;
+  }
+}
+
+/* 传感器页里的摄像头入口：和传感器卡片同样式，但它是一个链接 */
+.cam-entry {
+  color: inherit;
+  text-decoration: none;
+}
