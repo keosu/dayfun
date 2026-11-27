@@ -15,8 +15,12 @@ function offlineBundle() {
             ? walk(resolve(directory, entry.name))
             : [resolve(directory, entry.name)],
         );
+      // senselab 是单独的应用（见 public/senselab），不进入这里的离线清单和版本号
+      const isOwnApp = (file) =>
+        /\/senselab\//.test(file.replaceAll("\\", "/"));
       const files = walk(root).filter(
-        (file) => !/(sw\.js|\.nojekyll|index\.html)$/.test(file),
+        (file) =>
+          !/(sw\.js|\.nojekyll|index\.html)$/.test(file) && !isOwnApp(file),
       );
       const precache = [
         "./",
@@ -26,7 +30,7 @@ function offlineBundle() {
       ];
       const hash = createHash("sha256");
       walk(root)
-        .filter((file) => !file.endsWith("sw.js"))
+        .filter((file) => !file.endsWith("sw.js") && !isOwnApp(file))
         .forEach((file) => hash.update(readFileSync(file)));
       const version = `little-day-v2-${hash.digest("hex").slice(0, 12)}`;
       let worker = readFileSync(resolve("public/sw.js"), "utf8");

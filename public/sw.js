@@ -49,6 +49,8 @@ self.addEventListener("notificationclick", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
+  // senselab（体感实验室）是同一站点下的另一个应用，有自己的资源，不交给这里的应用壳处理
+  if (url.pathname.startsWith(`${SCOPE}senselab/`)) return;
   if (
     request.method !== "GET" ||
     url.origin !== self.location.origin ||

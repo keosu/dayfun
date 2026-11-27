@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>电脑端监视器 · 体感实验室</title>
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/pc.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <h1>电脑端监视器</h1>
+        <span class="pad-status" id="conn" data-state="closed">未连接</span>
+        <div class="top-actions">
+          <button class="btn" id="rumble" type="button">📳 让手柄震一下</button>
+        </div>
+      </header>
+      <main class="pc">
+        <section class="pc-arena">
+          <canvas id="arena" aria-label="演示小球场地"></canvas>
+          <p class="arena-tip">
+            演示：倾斜或推摇杆移动小球 · A 跳一下 · 甩一下冲刺 · 上升跳起 ·
+            摇一摇回中心
+          </p>
+        </section>
+        <aside class="pc-side">
+          <div class="pc-card">
+            <strong>手机怎么连</strong>
+            <div id="urls" class="urls"></div>
+          </div>
+          <div class="pc-card players" id="players"></div>
+          <div class="pc-card log-card">
+            <strong>动作记录</strong>
+            <ol id="log" class="log scroll"></ol>
+          </div>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="js/pc.js"></script>
+  </body>
+</html>

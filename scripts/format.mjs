@@ -41,9 +41,22 @@ for (const path of [
   "tests/theme.spec.js",
   "tests/timer.spec.js",
   "tests/calendar.spec.js",
+  "tests/senselab.spec.js",
   "scripts/tune-physics.mjs",
   ".github/workflows/deploy.yml",
 ]) {
+  const source = await readFile(path, "utf8");
+  await writeFile(path, await prettier.format(source, { filepath: path }));
+}
+
+// senselab：前端（public/senselab）和它的局域网服务与测试（senselab/）
+const senselabFiles = [];
+for (const dir of ["public/senselab", "senselab/server", "senselab/test", "senselab/e2e", "senselab/examples", "senselab/scripts"]) {
+  for (const rel of await readdir(dir, { recursive: true })) {
+    if (/\.(m?js|css|html|webmanifest)$/.test(rel)) senselabFiles.push(`${dir}/${rel}`.replaceAll("\\", "/"));
+  }
+}
+for (const path of [...senselabFiles, "senselab/playwright.config.js", "senselab/package.json"]) {
   const source = await readFile(path, "utf8");
   await writeFile(path, await prettier.format(source, { filepath: path }));
 }

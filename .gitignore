@@ -4,3 +4,7 @@ playwright-report/
 test-results/
 server/data/
 .env
+# senselab 的本地证书和截图（见 senselab/README.md）
+.certs/
+certs/
+senselab/screenshots/

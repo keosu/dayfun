@@ -20,6 +20,7 @@ description: Project guide and agent status for 趣日常 (DAYFUN), the Vite + v
 - 数据：IndexedDB（`storage.js`），`records.js` 是前端与同步服务共用的校验；可选同步服务 `server/sync-server.mjs`（需要 token，部署时要 HTTPS 与来源白名单）。
 - 构建：`base: "./"`；`vite.config.js` 生成离线清单、把内容哈希写进 `public/sw.js`、把 three.js 拆成独立分块。
 - 样式层：旧的 `styles.css`、`compact.css`、`app.css` 之后，最后加载 `assets/shell.css`。新样式写进 `shell.css`，覆盖旧规则要用更高特异性。
+- **子应用 senselab（体感实验室）**：前端在 `public/senselab/`，随站点发布到 `/dayfun/senselab/`；局域网手柄服务、测试和 README 在仓库根目录的 `senselab/`（独立 `package.json`，`npm install` 后 `npm start`，不发布）。它没有自己的 Service Worker；`public/sw.js` 对 `/senselab/` 直接放行，`vite.config.js` 的离线清单排除它。手柄服务只放行 `https://keosu.github.io` 的 Origin。
 
 更完整的文件地图见 [reference.md](reference.md)。
 
