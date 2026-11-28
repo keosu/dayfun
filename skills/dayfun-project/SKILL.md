@@ -22,6 +22,8 @@ description: Project guide and agent status for 趣日常 (DAYFUN), the Vite + v
 - 样式层：旧的 `styles.css`、`compact.css`、`app.css` 之后，最后加载 `assets/shell.css`。新样式写进 `shell.css`，覆盖旧规则要用更高特异性。
 - **子应用 senselab（体感实验室）**：前端在 `public/senselab/`，随站点发布到 `/dayfun/senselab/`；局域网手柄服务、测试和 README 在仓库根目录的 `senselab/`（独立 `package.json`，`npm install` 后 `npm start`，不发布）。它没有自己的 Service Worker；`public/sw.js` 对 `/senselab/` 直接放行，`vite.config.js` 的离线清单排除它。手柄服务只放行 `https://keosu.github.io` 的 Origin。
 
+- **子应用 颐和园导览**：源码在仓库根目录 `summer-palace-guide/`，是独立的原生 PWA（自带 `package.json`、`sw.js`、测试，不参与 Vite 构建）。`vite.config.js` 里的 `SUB_APPS` 只把它的发布文件复制到 `dist/summer-palace-guide/`，发布到 `/dayfun/summer-palace-guide/`；它不进入 dayfun 的离线清单，`public/sw.js` 对 `/summer-palace-guide/` 直接放行（否则导航会被替换成首页）。改了它的代码后，要在该目录运行 `npm run build` 重新生成 `sw.js`。冒烟测试见 `tests/summer-palace.spec.js`。
+
 更完整的文件地图见 [reference.md](reference.md)。
 
 ## 五个视图

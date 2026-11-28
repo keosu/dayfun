@@ -42,6 +42,7 @@ for (const path of [
   "tests/timer.spec.js",
   "tests/calendar.spec.js",
   "tests/senselab.spec.js",
+  "tests/summer-palace.spec.js",
   "scripts/tune-physics.mjs",
   ".github/workflows/deploy.yml",
 ]) {

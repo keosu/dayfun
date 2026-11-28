@@ -49,8 +49,13 @@ self.addEventListener("notificationclick", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
-  // senselab（体感实验室）是同一站点下的另一个应用，有自己的资源，不交给这里的应用壳处理
-  if (url.pathname.startsWith(`${SCOPE}senselab/`)) return;
+  // senselab（体感实验室）和颐和园导览是同一站点下的其他应用，有自己的资源和 Service Worker，
+  // 不交给这里的应用壳处理（否则导航会被替换成首页）
+  if (
+    url.pathname.startsWith(`${SCOPE}senselab/`) ||
+    url.pathname.startsWith(`${SCOPE}summer-palace-guide/`)
+  )
+    return;
   if (
     request.method !== "GET" ||
     url.origin !== self.location.origin ||
