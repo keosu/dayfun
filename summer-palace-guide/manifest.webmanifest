@@ -1,0 +1,18 @@
+{
+  "name": "颐和园导览",
+  "short_name": "颐和园导览",
+  "description": "颐和园自动定位语音导览：走到哪儿讲到哪儿，带图片、文字、语音和推荐线路，可离线使用。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f0e4",
+  "theme_color": "#f6f0e4",
+  "categories": ["travel", "navigation"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

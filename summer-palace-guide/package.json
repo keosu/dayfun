@@ -1,0 +1,18 @@
+{
+  "name": "summer-palace-guide",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "颐和园导览：自动定位讲解、推荐线路，PWA，可离线",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test \"tests/unit/*.test.js\"",
+    "e2e": "playwright test",
+    "build:data": "node tools/build-map.mjs && node tools/build-data.mjs",
+    "build": "node tools/build-sw.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "leaflet": "1.9.4"
+  }
+}
